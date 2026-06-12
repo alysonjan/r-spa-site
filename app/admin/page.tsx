@@ -56,7 +56,7 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/admin/bookings?status=pending");
       const data = await res.json();
-      setPending(data || []);
+      setPending(Array.isArray(data) ? data : []);
     } catch {
       toast.error("Failed to load bookings");
     }

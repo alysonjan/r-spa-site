@@ -81,7 +81,8 @@ export default function RootLayout({
         closes: "20:00",
       },
     ],
-    email: "ryan@nesses.ca",
+    // email: "ryan@nesses.ca",
+    email: process.env.DEVELOPER_EMAIL || "",
   };
 
   return (

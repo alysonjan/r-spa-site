@@ -52,7 +52,7 @@ export default function AdminCalendar({ onEventClick }: Props) {
     try {
       const res = await fetch("/api/admin/bookings");
       const data = await res.json();
-      setEvents(data || []);
+      setEvents(Array.isArray(data) ? data : []);
     } catch {
       toast.error("Failed to load events");
     }
@@ -71,9 +71,10 @@ export default function AdminCalendar({ onEventClick }: Props) {
   }
 
   // Filter events based on showCancelled toggle
+  const safeEvents = Array.isArray(events) ? events : [];
   const filteredEvents = showCancelled
-    ? events
-    : events.filter((e) => e.status !== "cancelled");
+    ? safeEvents
+    : safeEvents.filter((e) => e.status !== "cancelled");
 
   return (
     <div className="relative w-full">
