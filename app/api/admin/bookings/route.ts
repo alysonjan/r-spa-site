@@ -7,7 +7,6 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createBooking } from "@/lib/bookings";
 import { sendBookingEmails } from "@/lib/emails";
-import { SERVICES } from "@/lib/services.catalog";
 
 dayjs.extend(utc);
 dayjs.extend(tz);
@@ -75,9 +74,10 @@ export async function GET(req: NextRequest) {
 
 // Admin manual booking creation
 const schema = z.object({
-  service: z.enum(SERVICES),
+  service: z.string(),
   date: z.string().min(8),
   time: z.string().min(4),
+  duration: z.number().optional(),
   name: z.string().min(2),
   email: z.string().email(),
   phone: z.string().min(6),
@@ -100,6 +100,7 @@ export async function POST(req: NextRequest) {
       service: data.service,
       date: data.date,
       time: data.time,
+      duration: data.duration,
       name: data.name,
       email: data.email,
       phone: data.phone,

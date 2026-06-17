@@ -111,99 +111,96 @@ function UnifiedPricingBar() {
   );
 }
 
-export default function SpaPage() {
+import { createClient } from "@supabase/supabase-js";
+
+export const revalidate = 0;
+
+export default async function SpaPage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const { data: services, error } = await supabase
+    .from("services")
+    .select("*")
+    .eq("is_active", true)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("[SpaPage] Supabase error:", error);
+  } else {
+    console.log("[SpaPage] Services fetched:", services?.length);
+  }
+
   return (
     <>
       <PageHeader />
 
       <section className="py-10 sm:py-14 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* Section A */}
+          
           <div className="mb-16">
             <SectionHeader
-              kicker="Essential Care"
-              title="Standard Massage"
-              subtitle="Four classic options with a consistent price structure. Choose the area that matches how you feel today."
+              kicker="Our Treatments"
+              title="Spa & Massage"
+              subtitle="Browse our full list of available treatments. Pricing and duration are clearly listed for each session."
             />
 
-            <UnifiedPricingBar />
+            {['Standard Massage', 'Specialized Therapy', 'Therapies', 'Other'].map((catName) => {
+              const categoryServices = (services || []).filter(
+                s => (s.category || 'Therapies') === catName
+              );
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {STANDARD_MASSAGES.map((m) => (
-                <div
-                  key={m.title}
-                  className="rounded-2xl border border-zinc-200 bg-white p-6 transition-colors hover:border-zinc-300"
-                >
-                  <h3 className="font-semibold text-base text-zinc-950">{m.title}</h3>
-                  <p className="mt-2 text-sm text-zinc-600 leading-relaxed">
-                    {m.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+              if (categoryServices.length === 0) return null;
 
-          {/* Section B */}
-          <div className="mb-16">
-            <SectionHeader
-              kicker="Specialized Therapy"
-              title="Lymphatic Drainage"
-              subtitle="A gentle, targeted technique that supports circulation and relaxation. Pricing differs from standard massage."
-            />
-
-            <div className="rounded-2xl border border-zinc-950 bg-white p-4 sm:p-6 md:p-8">
-              {/* Signature badge - responsive positioning */}
-              <div className="mb-4 sm:mb-0 sm:float-right sm:ml-4">
-                <span className="inline-flex items-center rounded-full border border-zinc-950 px-3 py-1 text-[11px] font-semibold text-zinc-950 uppercase tracking-[0.18em] whitespace-nowrap">
-                  Signature
-                </span>
-              </div>
-
-              <div className="min-w-0">
-                <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-zinc-950 break-words leading-snug pr-0 sm:pr-4">
-                  Lymphatic Drainage Massage
-                </h3>
-                <p className="mt-3 text-sm sm:text-base text-zinc-600 leading-relaxed break-words whitespace-normal">
-                  Gentle massage to support natural detoxification and circulation.
-                </p>
-
-                <div className="mt-6 sm:mt-7 divide-y divide-zinc-200 rounded-xl border border-zinc-200 clear-both">
-                  <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-4 px-4 sm:px-5 py-3 sm:py-4 min-w-0">
-                    <div className="text-sm sm:text-base text-zinc-700 min-w-0">
-                      <span className="font-medium text-zinc-950 whitespace-nowrap">60 min</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-base sm:text-lg font-semibold text-zinc-950 whitespace-nowrap">
-                        CA$130
-                      </div>
-                      <Link
-                        href="/booking?service=lymphatic&minutes=60"
-                        className="text-xs sm:text-sm font-medium text-zinc-900 hover:underline whitespace-nowrap"
-                      >
-                        Book now →
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-4 px-4 sm:px-5 py-3 sm:py-4 min-w-0">
-                    <div className="text-sm sm:text-base text-zinc-700 min-w-0">
-                      <span className="font-medium text-zinc-950 whitespace-nowrap">90 min</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-base sm:text-lg font-semibold text-zinc-950 whitespace-nowrap">
-                        CA$160
-                      </div>
-                      <Link
-                        href="/booking?service=lymphatic&minutes=90"
-                        className="text-xs sm:text-sm font-medium text-zinc-900 hover:underline whitespace-nowrap"
-                      >
-                        Book now →
-                      </Link>
-                    </div>
+              return (
+                <div key={catName} className="mt-12 first:mt-0">
+                  <h3 className="text-2xl font-serif text-zinc-950 mb-6 pb-2 border-b border-zinc-200">
+                    {catName}
+                  </h3>
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {categoryServices.map((s) => {
+                      const firstOption = s.options?.[0] || { time: '60', price: '0' };
+                      return (
+                        <div
+                          key={s.id}
+                          className="rounded-2xl border border-zinc-200 bg-white p-6 transition-colors hover:border-zinc-300 flex flex-col justify-between"
+                        >
+                          <div>
+                            <h4 className="font-semibold text-xl text-zinc-950 leading-snug pr-4">
+                              {s.title}
+                            </h4>
+                            {s.description && (
+                              <p className="mt-2 text-sm text-zinc-600">
+                                {s.description}
+                              </p>
+                            )}
+                            <div className="mt-4 flex items-center gap-3 text-sm text-zinc-600">
+                              <span className="font-medium text-zinc-900">{firstOption.time} min</span>
+                              {parseFloat(firstOption.price) > 0 && (
+                                <>
+                                  <span>·</span>
+                                  <span className="font-medium text-zinc-900">CA${parseFloat(firstOption.price).toFixed(0)}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div className="mt-8 pt-4 border-t border-zinc-100">
+                            <Link
+                              href={`/booking?service=${encodeURIComponent(s.title)}&minutes=${firstOption.time}`}
+                              className="inline-flex items-center text-sm font-semibold text-zinc-900 hover:underline"
+                            >
+                              Book now <span className="ml-1 text-lg leading-none">→</span>
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
 
           {/* Page-level CTA (only here) */}
@@ -212,7 +209,7 @@ export default function SpaPage() {
               href="/booking"
               className="inline-flex items-center rounded-2xl bg-black px-5 py-3 text-white hover:opacity-90"
             >
-              Book a spa
+              Book an appointment
             </Link>
             <Link
               href="/amenities"

@@ -52,7 +52,7 @@ export default function AdminCalendar({ onEventClick }: Props) {
     try {
       const res = await fetch("/api/admin/bookings");
       const data = await res.json();
-      setEvents(data || []);
+      setEvents(Array.isArray(data) ? data : []);
     } catch {
       toast.error("Failed to load events");
     }
@@ -71,9 +71,10 @@ export default function AdminCalendar({ onEventClick }: Props) {
   }
 
   // Filter events based on showCancelled toggle
+  const safeEvents = Array.isArray(events) ? events : [];
   const filteredEvents = showCancelled
-    ? events
-    : events.filter((e) => e.status !== "cancelled");
+    ? safeEvents
+    : safeEvents.filter((e) => e.status !== "cancelled");
 
   return (
     <div className="relative w-full">
@@ -217,7 +218,7 @@ export default function AdminCalendar({ onEventClick }: Props) {
                       if (e.target === e.currentTarget) setShowAddModal(false);
                     }}
                   >
-                    <div className="bg-white rounded-xl shadow-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xl font-semibold">Add Appointment</h3>
                         <button

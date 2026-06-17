@@ -4,11 +4,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { CalendarDays, Home, LogOut, GraduationCap, CreditCard, Users, X } from "lucide-react";
+import { CalendarDays, Home, LogOut, GraduationCap, CreditCard, Users, X, Scissors } from "lucide-react";
 import AdminCalendar from "@/components/AdminCalendar";
 import ClassesManagement from "@/components/ClassesManagement";
 import GiftCardsManagement from "@/components/GiftCardsManagement";
 import ClientList from "@/components/ClientList";
+import ServicesManagement from "@/components/ServicesManagement";
+import BistroMenuManagement from "@/components/BistroMenuManagement";
 import AdminBookingDetailModal from "@/components/AdminBookingDetailModal";
 import toast from "react-hot-toast";
 
@@ -23,7 +25,7 @@ type Booking = {
   status: string;
 };
 
-type TabType = "bookings" | "classes" | "giftcards" | "clients";
+type TabType = "bookings" | "classes" | "giftcards" | "clients" | "services" | "bistro";
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>("bookings");
@@ -45,6 +47,20 @@ export default function AdminPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // 🔄 Sync active tab with URL hash so refreshing doesn't lose your place
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (["bookings", "classes", "giftcards", "clients", "services", "bistro"].includes(hash)) {
+      setActiveTab(hash as TabType);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (window.location.hash.replace("#", "") !== activeTab) {
+      window.location.hash = activeTab;
+    }
+  }, [activeTab]);
+
   // 📦 Load pending bookings
   useEffect(() => {
     if (activeTab === "bookings") {
@@ -56,7 +72,7 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/admin/bookings?status=pending");
       const data = await res.json();
-      setPending(data || []);
+      setPending(Array.isArray(data) ? data : []);
     } catch {
       toast.error("Failed to load bookings");
     }
@@ -213,6 +229,28 @@ export default function AdminPage() {
             <Users className="h-4 w-4" />
             Clients
           </button>
+          <button
+            onClick={() => setActiveTab("services")}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 ${
+              activeTab === "services"
+                ? "bg-purple-100 text-purple-700 font-medium"
+                : "hover:bg-zinc-100"
+            }`}
+          >
+            <Scissors className="h-4 w-4" />
+            Services
+          </button>
+          <button
+            onClick={() => setActiveTab("bistro")}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 ${
+              activeTab === "bistro"
+                ? "bg-purple-100 text-purple-700 font-medium"
+                : "hover:bg-zinc-100"
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-coffee"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg>
+            Bistro Menu
+          </button>
 
           <Link href="/" className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-zinc-100">
             <Home className="h-4 w-4" />
@@ -277,24 +315,27 @@ export default function AdminPage() {
                 >
                   Clients
                 </button>
-              </div>
-            </div>
-
-            {/* Mobile Navigation - Back to site & Sign out */}
-            <div className="flex gap-2">
-              <Link
-                href="/"
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-white border rounded-lg hover:bg-zinc-50 transition-colors"
-              >
-                <Home className="h-4 w-4" />
-                Back to site
-              </Link>
-              <form action="/api/admin/logout" method="post" className="flex-1">
-                <button className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
-                  <LogOut className="h-4 w-4" />
-                  Sign out
+                <button
+                  onClick={() => setActiveTab("services")}
+                  className={`flex-none min-w-[100px] px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "services"
+                      ? "bg-purple-600 text-white"
+                      : "text-zinc-600 hover:bg-zinc-100"
+                  }`}
+                >
+                  Services
                 </button>
-              </form>
+                <button
+                  onClick={() => setActiveTab("bistro")}
+                  className={`flex-none min-w-[100px] px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "bistro"
+                      ? "bg-purple-600 text-white"
+                      : "text-zinc-600 hover:bg-zinc-100"
+                  }`}
+                >
+                  Bistro
+                </button>
+              </div>
             </div>
           </div>
 
@@ -384,9 +425,6 @@ export default function AdminPage() {
             >
               <div>
                 <h1 className="text-2xl font-semibold">Classes Management</h1>
-                <p className="text-sm text-zinc-600 mt-1">
-                  Manage class capacity, view participants, and send reminders
-                </p>
               </div>
               <ClassesManagement />
             </motion.div>
@@ -404,9 +442,6 @@ export default function AdminPage() {
             >
               <div>
                 <h1 className="text-2xl font-semibold">Gift Cards Management</h1>
-                <p className="text-sm text-zinc-600 mt-1">
-                  View and manage all gift cards
-                </p>
               </div>
               <GiftCardsManagement />
             </motion.div>
@@ -422,13 +457,26 @@ export default function AdminPage() {
               transition={{ duration: 0.2 }}
               className="space-y-6"
             >
-              <div>
-                <h1 className="text-2xl font-semibold">Client Management</h1>
-                <p className="text-sm text-zinc-600 mt-1">
-                  View all clients and send promotional emails
-                </p>
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
+                <ClientList />
               </div>
-              <ClientList />
+            </motion.div>
+          )}
+
+          {/* Services Tab / Bistro Tab */}
+          {(activeTab === "services" || activeTab === "bistro") && (
+            <motion.div
+              key="services-bistro"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
+                {activeTab === "services" && <ServicesManagement />}
+                {activeTab === "bistro" && <BistroMenuManagement />}
+              </div>
             </motion.div>
           )}
         </div>

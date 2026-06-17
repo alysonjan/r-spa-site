@@ -8,7 +8,8 @@ export async function GET() {
   try {
     const data = await resend.emails.send({
       from: "Rejuvenessence <noreply@rejuvenessence.org>",
-      to: "liuchengxi0519@163.com",
+      // to: "liuchengxi0519@163.com",
+      to: process.env.DEVELOPER_EMAIL || "",
       subject: "✅ Rejuvenessence Test Email",
       html: "<p>This is a test from the Rejuvenessence system.</p>",
     });

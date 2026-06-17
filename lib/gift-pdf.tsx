@@ -1,6 +1,7 @@
 // lib/gift-pdf.tsx
 import React from "react";
-import { Document, Page, Text, View, StyleSheet, pdf } from "@react-pdf/renderer";
+// @ts-ignore - The browser types don't export renderToBuffer, but it works in Node.js
+import { Document, Page, Text, View, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 
 // 品牌色彩 - 匹配网站和邮件模板
 const COLORS = {
@@ -440,14 +441,8 @@ export async function renderGiftPdfBuffer(p: GiftPdfProps): Promise<Buffer> {
       throw new Error("Missing required props: code and value are required");
     }
 
-    // Create PDF document
-    const instance = pdf(<GiftCardPdfEnhanced {...p} />);
-
-    // Generate the PDF buffer (returns Uint8Array in v4.x)
-    const arrayBuffer = await instance.toBuffer();
-
-    // Convert Uint8Array to Node.js Buffer
-    const buffer = Buffer.from(arrayBuffer);
+    // Generate the PDF buffer directly using renderToBuffer
+    const buffer = await renderToBuffer(<GiftCardPdfEnhanced {...p} />);
 
     // Validate buffer
     if (!buffer || buffer.length === 0) {
