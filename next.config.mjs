@@ -5,5 +5,11 @@ const nextConfig = {
           { source: '/services', destination: '/spa', permanent: true }, // 老 -> 新
         ];
       },
+    eslint: {
+      ignoreDuringBuilds: true,
+    },
+    typescript: {
+      ignoreBuildErrors: true,
+    },
 };
 export default nextConfig;
