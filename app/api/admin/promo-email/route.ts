@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
+const resend = new Resend(process.env.RESEND_API_KEY || "placeholder-key");
 const SITE_NAME = process.env.SITE_NAME || "Rejuvenessence";
 
 export async function POST(req: Request) {
