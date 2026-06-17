@@ -40,10 +40,16 @@ export async function POST(req: NextRequest) {
   }
 
   if (!process.env.ADMIN_PASSCODE || pass !== process.env.ADMIN_PASSCODE) {
-    return NextResponse.json(
-      { ok: false, error: "Invalid passcode" },
-      { status: 401 },
-    );
+    let baseUrl = process.env.NEXT_PUBLIC_SITE_URL || req.url;
+    if (baseUrl === req.url) {
+      const parsed = new URL(req.url);
+      baseUrl = parsed.origin;
+    }
+    const dest = new URL("/admin/login", baseUrl);
+    dest.searchParams.set("error", "invalid_passcode");
+    if (next && next !== "/admin") dest.searchParams.set("next", next);
+    
+    return NextResponse.redirect(dest, { status: 303 });
   }
 
   const dest = sanitizeNextPath(next);
