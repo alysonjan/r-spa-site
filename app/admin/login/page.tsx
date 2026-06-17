@@ -23,6 +23,18 @@ export default function AdminLoginPage({
 
         <form action="/api/admin/login" method="post" className="space-y-4">
           <input type="hidden" name="next" value={next} />
+          
+          {searchParams?.error === "invalid_passcode" && (
+            <div className="bg-red-50 text-red-600 p-3 rounded text-sm border border-red-200">
+              Invalid passcode. Please try again.
+            </div>
+          )}
+
+          {searchParams?.logged_out === "1" && (
+            <div className="bg-green-50 text-green-600 p-3 rounded text-sm border border-green-200">
+              You have been successfully logged out.
+            </div>
+          )}
 
           <label htmlFor="passcode">Passcode</label>
           <input
