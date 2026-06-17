@@ -383,7 +383,7 @@ export default function BistroMenuManagement() {
             ))}
             {menus.length === 0 && (
               <div className="col-span-full text-center py-10 text-zinc-500 bg-zinc-50 rounded border border-dashed border-zinc-200">
-                No menus created yet. Click "Create Menu" to build one.
+                No menus created yet. Click &quot;Create Menu&quot; to build one.
               </div>
             )}
           </div>
