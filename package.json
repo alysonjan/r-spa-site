@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H 0.0.0.0",
     "lint": "next lint",
     "check-env": "node scripts/check-env.js",
     "predeployment": "npm run check-env && npm run lint && npm run build",
