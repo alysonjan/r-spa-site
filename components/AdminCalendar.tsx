@@ -218,7 +218,7 @@ export default function AdminCalendar({ onEventClick }: Props) {
                       if (e.target === e.currentTarget) setShowAddModal(false);
                     }}
                   >
-                    <div className="bg-white rounded-xl shadow-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xl font-semibold">Add Appointment</h3>
                         <button

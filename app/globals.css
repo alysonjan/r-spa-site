@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+@import 'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.13/index.css';
+@import 'https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.13/index.css';
+@import 'https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.13/index.css';
+
 /* Base typography */
 :root {
   color-scheme: light;

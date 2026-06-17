@@ -14,16 +14,8 @@ import {
   MASSAGE_CATEGORIES,
   SERVICE_CATALOG,
   getServiceByName,
+  ServiceCatalogItem,
 } from "@/lib/services.catalog";
-
-// Massage type mapping for 2-stage selection
-const MASSAGE_TYPES = [
-  { key: "head", label: "Head Massage", category: "head" },
-  { key: "back-shoulders", label: "Back & Shoulders", category: "back-shoulders" },
-  { key: "foot", label: "Foot Massage", category: "foot" },
-  { key: "full-body", label: "Full Body Massage", category: "full-body" },
-  { key: "lymphatic", label: "Lymphatic Drainage", category: "lymphatic" },
-];
 
 // Time step for mobile select dropdown (15 minutes)
 const TIME_STEP_MIN = 15;
@@ -146,6 +138,78 @@ export default function BookingForm({
   const [timeError, setTimeError] = useState<string | null>(null);
   const [suggestedTimes, setSuggestedTimes] = useState<string[]>([]);
 
+  // Dynamic Services
+  const [dynamicCatalog, setDynamicCatalog] = useState<any[]>(SERVICE_CATALOG);
+  const [servicesByCategory, setServicesByCategory] = useState<any>(SERVICES_BY_CATEGORY);
+  const [massageTypes, setMassageTypes] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/services')
+      .then(res => res.json())
+      .then(data => {
+         let mapped: any[] = [];
+         data.forEach((item: any) => {
+             const isMassage = item.category === "Standard Massage" || item.category === "Specialized Therapy";
+             const mappedCategory = isMassage ? item.title : (item.category === "Other" ? "other" : "therapy");
+             
+             if (item.options && item.options.length > 0) {
+                 item.options.forEach((opt: any) => {
+                     const priceNum = parseFloat(opt.price.replace(/[^0-9.-]+/g,"")) || 0;
+                     mapped.push({
+                         name: `${item.title} (${opt.time}m)`,
+                         baseName: item.title,
+                         category: mappedCategory,
+                         isMassage,
+                         minutes: parseInt(opt.time) || 60,
+                         priceCents: priceNum * 100,
+                         available: item.is_active,
+                         description: item.description
+                     });
+                 });
+             } else {
+                 mapped.push({
+                     name: item.title,
+                     baseName: item.title,
+                     category: mappedCategory,
+                     isMassage,
+                     minutes: 60,
+                     priceCents: 0,
+                     available: item.is_active,
+                     description: item.description
+                 });
+             }
+         });
+         
+         setDynamicCatalog(mapped);
+         
+         const byCategory = mapped.filter(s => s.available).reduce((acc, service) => {
+            if (!acc[service.category]) {
+                acc[service.category] = [];
+            }
+            acc[service.category].push(service);
+            return acc;
+         }, {} as Record<string, any[]>);
+         
+         setServicesByCategory(byCategory);
+         
+         // Dynamically generate massage types from the active massage services
+         const mTypes: any[] = [];
+         mapped.filter(s => s.available && s.isMassage).forEach(s => {
+             if (!mTypes.find(m => m.key === s.baseName)) {
+                 mTypes.push({
+                     key: s.baseName,
+                     label: s.baseName,
+                     category: s.category
+                 });
+             }
+         });
+         setMassageTypes(mTypes);
+      })
+      .catch(err => {
+         console.error('Failed to load dynamic services, using fallback:', err);
+      });
+  }, []);
+
   // Clear time error when date or time changes
   useEffect(() => {
     if (timeError) {
@@ -161,14 +225,14 @@ export default function BookingForm({
 
   // Deep-link preselect: handle ?service=<code>&minutes=<duration>
   useEffect(() => {
-    if (!serviceParam) return;
+    if (!serviceParam || massageTypes.length === 0 || dynamicCatalog.length === 0) return;
 
-    // Check if it's a massage type (head, back-shoulders, foot, full-body, lymphatic)
-    const massageType = MASSAGE_TYPES.find((mt) => mt.key === serviceParam);
+    // Check if it's a massage type
+    const massageType = massageTypes.find((mt) => mt.key === serviceParam || mt.label === serviceParam);
     if (massageType) {
       // It's a massage service - clear therapy selection
       setSelectedTherapyService(null);
-      setSelectedMassageType(serviceParam);
+      setSelectedMassageType(massageType.key);
       setActiveServiceTab("massage");
 
       if (minutesParam) {
@@ -188,8 +252,8 @@ export default function BookingForm({
       }, 100);
     } else {
       // Check if it's a therapy service (full service name)
-      const therapyService = SERVICE_CATALOG.find(
-        (s) => s.category === "therapy" && s.name === serviceParam
+      const therapyService = dynamicCatalog.find(
+        (s) => !s.isMassage && (s.name === serviceParam || s.baseName === serviceParam)
       );
       if (therapyService) {
         // It's a therapy service - clear massage selection
@@ -204,7 +268,7 @@ export default function BookingForm({
         }, 100);
       }
     }
-  }, [serviceParam, minutesParam]);
+  }, [serviceParam, minutesParam, massageTypes, dynamicCatalog]);
 
   // Refs for scrolling to sections
   const massageSectionRef = useRef<HTMLDivElement>(null);
@@ -295,24 +359,11 @@ export default function BookingForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Helper: construct service name from massage type + minutes
-  const constructMassageServiceName = (type: string, minutes: number): string => {
-    const typeLabels: Record<string, string> = {
-      "head": "Head Massage",
-      "back-shoulders": "Back & Shoulders Massage",
-      "foot": "Foot Massage",
-      "full-body": "Full Body Massage",
-      "lymphatic": "Lymphatic Drainage Massage",
-    };
-    const label = typeLabels[type] || "Massage";
-    return `${label} (${minutes}m)`;
-  };
-
   // Compute selectedServiceName (single source of truth)
   const selectedServiceName = selectedTherapyService
     ? selectedTherapyService
     : (selectedMassageType && selectedMassageMinutes)
-      ? constructMassageServiceName(selectedMassageType, selectedMassageMinutes)
+      ? `${selectedMassageType} (${selectedMassageMinutes}m)`
       : null;
 
   // Effect: sync selectedServiceName to form.service
@@ -328,7 +379,7 @@ export default function BookingForm({
 
   // Effect: clear addons for 60/90-min massage (not eligible for paid addons)
   useEffect(() => {
-    const service = getServiceByName(form.service);
+    const service = dynamicCatalog.find(s => s.name === form.service) || getServiceByName(form.service);
     const minutes = service?.minutes || 0;
     const isMassage = form.service.toLowerCase().includes("massage");
 
@@ -407,7 +458,7 @@ export default function BookingForm({
   const gapClass = compact ? "gap-3" : "gap-4";
 
   // Get service details for add-ons eligibility
-  const selectedService = getServiceByName(form.service);
+  const selectedService = dynamicCatalog.find(s => s.name === form.service) || getServiceByName(form.service);
   const selectedMinutes = selectedService?.minutes || 0;
   const isMassageService =
     form.service.toLowerCase().includes("massage") ||
@@ -578,7 +629,7 @@ export default function BookingForm({
       }
 
       // Get service duration
-      const selectedService = getServiceByName(form.service);
+      const selectedService = dynamicCatalog.find(s => s.name === form.service) || getServiceByName(form.service);
       const durationMinutes = selectedService?.minutes || 60;
 
       // Parse selected time to get start and end timestamps
@@ -882,11 +933,14 @@ export default function BookingForm({
                     <label className="block text-xs font-medium text-zinc-600 mb-2">
                       1. Choose Massage Type
                     </label>
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {MASSAGE_TYPES.map((massageType) => {
+                    <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
+                      {massageTypes.map((massageType) => {
+                        const services = servicesByCategory[massageType.category] || [];
+                        const hasServices = services.length > 0;
                         const isSelected = selectedMassageType === massageType.key;
-                        const services = SERVICES_BY_CATEGORY[massageType.category] || [];
                         const desc = services[0]?.description || "";
+
+                        if (!hasServices) return null;
 
                         return (
                           <button
@@ -932,18 +986,14 @@ export default function BookingForm({
                       </label>
                       <div className="flex flex-wrap gap-3">
                         {(() => {
-                          const isLymphatic = selectedMassageType === "lymphatic";
-                          const durations = isLymphatic ? [60, 90] : [45, 60, 90];
-                          const getPriceForDuration = (mins: number) => {
-                            if (isLymphatic) {
-                              return mins === 60 ? 130 : 160;
-                            }
-                            return mins === 45 ? 75 : mins === 60 ? 100 : 150;
-                          };
+                          const services = servicesByCategory[selectedMassageType] || [];
+                          // Sort by duration length
+                          const sortedServices = [...services].sort((a, b) => a.minutes - b.minutes);
 
-                          return durations.map((mins) => {
+                          return sortedServices.map((service) => {
+                            const mins = service.minutes;
                             const isSelected = selectedMassageMinutes === mins;
-                            const price = getPriceForDuration(mins);
+                            const price = service.priceCents / 100;
 
                             return (
                               <button
@@ -983,7 +1033,7 @@ export default function BookingForm({
               )}
 
               {/* Therapy Services */}
-              {(activeServiceTab === "therapy" || isDesktop) && SERVICES_BY_CATEGORY.therapy && (
+              {(activeServiceTab === "therapy" || isDesktop) && servicesByCategory.therapy && (
                 <div
                   ref={therapySectionRef}
                   className={`space-y-3 transition-opacity ${selectedMassageType || selectedMassageMinutes ? 'opacity-40' : ''}`}
@@ -1008,8 +1058,8 @@ export default function BookingForm({
                     </div>
                   )}
 
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {SERVICES_BY_CATEGORY.therapy.map((service) => {
+                  <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
+                    {servicesByCategory.therapy.map((service) => {
                       const isSelected = selectedTherapyService === service.name;
                       const price = service.priceCents / 100;
 
@@ -1055,13 +1105,13 @@ export default function BookingForm({
               )}
 
               {/* Other Services */}
-              {SERVICES_BY_CATEGORY.other && (
+              {servicesByCategory.other && (
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-zinc-700">
                     {CATEGORY_LABELS.other}
                   </h4>
                   <div className="grid gap-3">
-                    {SERVICES_BY_CATEGORY.other.map((service) => {
+                    {servicesByCategory.other.map((service) => {
                       const isSelected = selectedTherapyService === service.name;
                       const price = service.priceCents / 100;
 

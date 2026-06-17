@@ -6,6 +6,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Toaster } from "react-hot-toast";
+import { cookies } from "next/headers";
+import { ADMIN_AUTH_COOKIE } from "@/lib/admin/adminAuth";
 
 const ChristmasOfferFloating = dynamic(
   () => import("@/components/ChristmasOfferFloating"),
@@ -87,24 +89,8 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <head>
-        {/* FullCalendar CSS */}
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.13/index.css"
-        />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.13/index.css"
-        />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.13/index.css"
-        />
-      </head>
-
       <body className="bg-zinc-50 text-zinc-900">
-        <Navbar />
+        <Navbar isAdminLoggedIn={cookies().has(ADMIN_AUTH_COOKIE)} />
         <main>{children}</main>
         <Footer />
         <Toaster position="top-right" />

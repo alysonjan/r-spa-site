@@ -32,6 +32,7 @@
     "resend": "3.3.0",
     "stripe": "^19.2.0",
     "twilio": "5.3.6",
+    "xlsx": "^0.18.5",
     "zod": "3.23.8"
   },
   "devDependencies": {

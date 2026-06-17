@@ -24,7 +24,7 @@ const lineVariants = {
   closed:   { rotate: 0,   y: 0, opacity: 1 },
 };
 
-export default function Navbar() {
+export default function Navbar({ isAdminLoggedIn = false }: { isAdminLoggedIn?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
@@ -150,7 +150,7 @@ export default function Navbar() {
                   <span className="hidden lg:inline">&nbsp;({accountLabel})</span>
                   <span className="sm:hidden">Account</span>
                 </Link>
-              ) : (
+              ) : isAdminLoggedIn ? null : (
                 <Link href="/sign-in" className="btn btn-primary">
                   Sign in
                 </Link>
@@ -229,7 +229,7 @@ export default function Navbar() {
                 <Link href="/account" className="btn btn-primary w-full text-sm">
                   My Account{accountLabel ? <span className="ml-1 opacity-80 text-xs">({accountLabel})</span> : null}
                 </Link>
-              ) : (
+              ) : isAdminLoggedIn ? null : (
                 <Link href="/sign-in" className="btn btn-primary w-full text-sm">
                   Sign in
                 </Link>

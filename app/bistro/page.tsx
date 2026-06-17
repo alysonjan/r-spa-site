@@ -11,91 +11,56 @@ export const metadata: Metadata = {
   alternates: { canonical: "/bistro" },
 };
 
-type Item = {
-  name: string;
-  desc?: string;
-  img: string;        // 放在 /public/bistro/ 下
-  priceFrom?: number; // “起”价
-  unit?: string;      // 自由文案：pp / per pc 等
-};
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
-const smallPlates: Item[] = [
-  { name: "Bruschetta Trio", desc: "Tomato basil · Roasted mushroom & feta · Grilled vegetable.", img: "/bistro/bruschetta.jpg", priceFrom: 10, unit: "pp" },
-  { name: "Hummus Platter", desc: "Pita & raw veggies.", img: "/bistro/hummus.jpg", priceFrom: 5, unit: "pp" },
-  { name: "Charcuterie Board", desc: "Cheeses, cured meats, berries, olives, grissini.", img: "/bistro/charcuterie.jpg", priceFrom: 20, unit: "pp" },
-  { name: "Tempura Shrimp", desc: "Light, crisp, house dip.", img: "/bistro/tempura-shrimp.jpg", priceFrom: 5, unit: "per pc" },
-  { name: "Lobster Mac & Cheese Bites", desc: "Rich & comforting.", img: "/bistro/lobster-mac-bites.jpg", priceFrom: 5, unit: "per pc" },
-  { name: "Korean BBQ Chicken Satay", desc: "Sweet-savory glaze.", img: "/bistro/chicken-satay.jpg", priceFrom: 5, unit: "per pc" },
-];
+export const revalidate = 0; // Force dynamic
 
-const salads: Item[] = [
-  { name: "Cucumber-Fenced Microgreens", desc: "Goat cheese & praline pecans.", img: "/bistro/microgreens.jpg", priceFrom: 17, unit: "pp" },
-  { name: "Classic Caesar", desc: "Shaved parmesan & garlic crostini.", img: "/bistro/caesar.jpg", priceFrom: 14, unit: "pp" },
-  { name: "Boston Bibb", desc: "Walnuts & gorgonzola dressing.", img: "/bistro/bibb.jpg", priceFrom: 12, unit: "pp" },
-];
-
-const pasta: Item[] = [
-  { name: "Tortellini Pesto Alfredo", img: "/bistro/tortellini.jpg", priceFrom: 17, unit: "pp" },
-  { name: "Penne Tomato Basil", img: "/bistro/penne-tomato.jpg", priceFrom: 15, unit: "pp" },
-  { name: "Penne alla Vodka", img: "/bistro/penne-vodka.jpg", priceFrom: 17, unit: "pp" },
-];
-
-const mains: Item[] = [
-  { name: "Black Olive-Crusted Salmon", desc: "Microgreen salad, basil sushi rice-wine vinaigrette.", img: "/bistro/salmon.jpg", priceFrom: 53, unit: "pp" },
-  { name: "Beef Tenderloin & Portobello", desc: "Red-wine demi, market veg, saffron potatoes.", img: "/bistro/beef-portobello.jpg", priceFrom: 73, unit: "pp" },
-  { name: "Pistachio-Dijon Rack of Lamb", desc: "Squash & root-veg risotto.", img: "/bistro/rack-of-lamb.jpg", priceFrom: 73, unit: "pp" },
-];
-
-const desserts: Item[] = [
-  { name: "Cookie Platter", img: "/bistro/cookies.jpg", priceFrom: 11, unit: "pp" },
-  { name: "Seasonal Pie", img: "/bistro/seasonal-pie.jpg", priceFrom: 15, unit: "pp" },
-  { name: "Crème Brûlée", desc: "Vanilla · Pistachio Chocolate · Bourbon Caramel · Black Forest · Mandarin Orange.", img: "/bistro/creme-brulee.jpg", priceFrom: 15, unit: "pp" },
-  { name: "Cheesecake Minis", desc: "Chocolate · Caramel · Fresh fruit compote.", img: "/bistro/cheesecake-minis.jpg", priceFrom: 15, unit: "pp" },
-  { name: "Fresh Fruit Platter", img: "/bistro/fruit-platter.jpg", priceFrom: 13, unit: "pp" },
-];
-
-type SimpleItem = { name: string; desc?: string };
-const cocktails: SimpleItem[] = [
-  { name: "Classic Spritz", desc: "Bright & bubbly aperitif." },
-  { name: "Garden Gin & Tonic", desc: "Herb-forward, crisp." },
-  { name: "Whisky Sour", desc: "Citrus balance, silky foam." },
-];
-const wine: SimpleItem[] = [
-  { name: "Wine by the Glass", desc: "Rotating selection of red/white/rosé." },
-  { name: "Sparkling", desc: "Celebrate with bubbles." },
-];
-const beerNA: SimpleItem[] = [
-  { name: "Local & Imported Beer" },
-  { name: "Zero-Proof", desc: "Sodas, iced teas, botanicals, espresso/tea." },
-];
-
-// —— UI —— //
-function formatPrice(it: Item) {
-  if (it.priceFrom == null) return "";
-  const unit = it.unit ? (it.unit.startsWith("per") ? ` ${it.unit}` : ` ${it.unit}`) : "";
-  return `From $${it.priceFrom}${unit}`;
+// —— UI Components —— //
+function formatPrice(price: number | null, basePrice: number | null) {
+  if (price === null && basePrice === null) return "";
+  
+  const displayPrice = price || basePrice;
+  return `$${displayPrice}`;
 }
 
-function FoodGrid({ items }: { items: Item[] }) {
+function FoodGrid({ items }: { items: any[] }) {
   return (
     <ul className="grid gap-5 sm:gap-6 md:gap-7 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((it) => (
-        <li key={it.name} className="overflow-hidden rounded-xl border bg-white">
-          <div className="relative aspect-[4/3] bg-zinc-100">
-            <Image
-              src={it.img}
-              alt={it.name}
-              fill
-              sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
-              className="object-cover"
-            />
+        <li key={it.id} className="overflow-hidden rounded-xl border bg-white flex flex-col">
+          <div className="relative aspect-[4/3] bg-zinc-100 flex-shrink-0">
+            {it.image_url ? (
+              <Image
+                src={it.image_url}
+                alt={it.item_name}
+                fill
+                sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
+                className="object-cover"
+              />
+            ) : (
+               <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                 <span className="text-sm">No Image</span>
+               </div>
+            )}
           </div>
-          <div className="p-4">
+          <div className="p-4 flex-grow flex flex-col">
             <div className="flex items-start justify-between gap-3">
-              <h4 className="font-semibold leading-6">{it.name}</h4>
-              <span className="shrink-0 text-sm text-zinc-700">{formatPrice(it)}</span>
+              <h4 className="font-semibold leading-6 text-zinc-900">{it.item_name}</h4>
+              <div className="shrink-0 text-right">
+                 <span className="text-sm font-semibold text-emerald-600">${it.current_price || it.base_price || 0}</span>
+                 {it.current_price > 0 && it.base_price > 0 && it.current_price < it.base_price && (
+                   <div className="text-xs text-rose-500 line-through">${it.base_price}</div>
+                 )}
+              </div>
             </div>
-            {it.desc && <p className="mt-1 text-sm leading-6 text-zinc-600">{it.desc}</p>}
+            {it.description && <p className="mt-1 text-sm leading-6 text-zinc-600 flex-grow">{it.description}</p>}
+            {it.seasonal_tag && (
+              <div className="mt-3">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-100 text-emerald-800">
+                  {it.seasonal_tag}
+                </span>
+              </div>
+            )}
           </div>
         </li>
       ))}
@@ -103,23 +68,52 @@ function FoodGrid({ items }: { items: Item[] }) {
   );
 }
 
-function SimpleGrid({ items }: { items: SimpleItem[] }) {
-  return (
-    <ul className="grid gap-3 sm:grid-cols-2">
-      {items.map((it) => (
-        <li key={it.name} className="rounded-xl border bg-white p-4">
-          <div className="font-semibold leading-6">{it.name}</div>
-          {it.desc && <p className="mt-1 text-sm leading-6 text-zinc-600">{it.desc}</p>}
-        </li>
-      ))}
-    </ul>
-  );
-}
 
-export default function BistroPage() {
+
+export default async function BistroPage() {
+  let allItems: any[] = [];
+
+  try {
+    const { data } = await supabaseAdmin
+      .from('bistro_items')
+      .select('*')
+      .eq('is_active', true)
+      .order('category')
+      .order('item_name');
+    if (data) allItems = data;
+  } catch (err) {
+    console.error("Failed to load bistro menu server-side:", err);
+  }
+
+  // Group items by category
+  const categories: Record<string, any[]> = {};
+  allItems.forEach(item => {
+    const cat = item.category || 'Other';
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push(item);
+  });
+
+  // Define food categories and bar categories
+  const foodCategoryOrder = ["Small Plates", "Salads", "Pasta", "Mains", "Desserts"];
+  const barCategories = ["Cocktails", "Wine", "Beer & Zero-Proof"];
+
+  // Any category not in barCategories is treated as a food category
+  const foodCats = Object.keys(categories)
+    .filter(c => !barCategories.includes(c))
+    .sort((a, b) => {
+      const idxA = foodCategoryOrder.indexOf(a);
+      const idxB = foodCategoryOrder.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
+  const hasBarItems = barCategories.some(c => categories[c]?.length > 0);
+
   return (
     <>
-      <Section eyebrow="Bistro" title="281 Bistro">
+      <Section eyebrow="BISTRO" title="281 Bistro">
         <p className="max-w-3xl text-lg text-zinc-600 leading-relaxed md:leading-8">
           Rejuvenessence Bistro, proudly features the licious, tantalizing, delicacies
           of the highly accredited chef Todd which engenders an additional pleasurable
@@ -131,55 +125,66 @@ export default function BistroPage() {
         </div>
       </Section>
 
-      <Section eyebrow="Menu" title="Small Plates">
-        <FoodGrid items={smallPlates} />
-      </Section>
+      {allItems.length === 0 ? (
+         <Section title="Menu Updating">
+           <p className="text-zinc-500">Our menu is currently being updated. Please check back later!</p>
+         </Section>
+      ) : (
+        <>
+          {foodCats.map((cat, idx) => (
+            <Section key={cat} eyebrow={idx === 0 ? "MENU" : undefined} title={cat}>
+              <FoodGrid items={categories[cat]} />
+            </Section>
+          ))}
 
-      <Section title="Salads">
-        <FoodGrid items={salads} />
-      </Section>
+          {hasBarItems && (
+            <Section eyebrow="BAR" title="Cocktails • Wine • Beer & Zero-Proof">
+              <div className="grid gap-6 md:grid-cols-3">
+                {barCategories.map(cat => {
+                  const items = categories[cat];
+                  if (!items || items.length === 0) return null;
+                  return (
+                    <div key={cat}>
+                      <h4 className="mb-2 font-semibold">{cat}</h4>
+                      <ul className="grid gap-3 sm:grid-cols-2">
+                        {items.map(it => (
+                          <li key={it.id} className="rounded-xl border bg-white p-4">
+                            <div className="font-semibold leading-6 flex justify-between gap-2">
+                              <span>{it.item_name}</span>
+                              <div className="text-right shrink-0">
+                                <span className="text-sm font-semibold text-emerald-600">${it.current_price || it.base_price || 0}</span>
+                                {it.current_price > 0 && it.base_price > 0 && it.current_price < it.base_price && (
+                                  <span className="ml-2 text-xs text-rose-500 line-through">${it.base_price}</span>
+                                )}
+                              </div>
+                            </div>
+                            {it.description && <p className="mt-1 text-sm leading-6 text-zinc-600">{it.description}</p>}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            </Section>
+          )}
+        </>
+      )}
 
-      <Section title="Pasta">
-        <FoodGrid items={pasta} />
-      </Section>
-
-      <Section title="Mains">
-        <FoodGrid items={mains} />
-      </Section>
-
-      <Section title="Desserts">
-        <FoodGrid items={desserts} />
-      </Section>
-
-      <Section eyebrow="Bar" title="Cocktails • Wine • Beer & Zero-Proof">
-        <div className="grid gap-6 md:grid-cols-3">
-          <div>
-            <h4 className="mb-2 font-semibold">Cocktails</h4>
-            <SimpleGrid items={cocktails} />
-          </div>
-          <div>
-            <h4 className="mb-2 font-semibold">Wine</h4>
-            <SimpleGrid items={wine} />
-          </div>
-          <div>
-            <h4 className="mb-2 font-semibold">Beer & Zero-Proof</h4>
-            <SimpleGrid items={beerNA} />
-          </div>
-        </div>
-
-        <p className="mt-6 text-sm leading-6 text-zinc-500">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 pb-24 border-t border-zinc-200 pt-8 mt-16">
+        <p className="text-sm leading-6 text-zinc-500 text-center">
           Menu prepared in collaboration with{" "}
           <a
             href="https://cheftoddskitchen.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline"
+            className="underline hover:text-zinc-900 transition-colors"
           >
             Chef Todd’s Kitchen
           </a>
           . Offerings/pricing may change based on season and supply.
         </p>
-      </Section>
+      </div>
     </>
   );
 }

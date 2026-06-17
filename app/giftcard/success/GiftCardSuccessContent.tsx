@@ -96,14 +96,40 @@ export default function GiftCardSuccessPage() {
   
     if (loading) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-          <div className="text-center">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center justify-center px-4">
+          <div className="text-center bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading your gift cards...</p>
+            <p className="text-gray-900 font-semibold text-lg">Loading your gift cards...</p>
             {retryCount > 0 && (
-              <p className="text-sm text-gray-500 mt-2">
-                Waiting for payment confirmation... ({retryCount}/10)
-              </p>
+              <div className="mt-4 space-y-4">
+                <p className="text-sm text-gray-500">
+                  Waiting for payment confirmation... ({retryCount}/10)
+                </p>
+                {process.env.NODE_ENV === "development" && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch("/api/dev/simulate-webhook", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ session_id: sessionId }),
+                        });
+                        if (res.ok) {
+                          toast.success("Webhook simulated! Loading cards...");
+                          fetchGiftCards(0); // force instant refetch
+                        } else {
+                          toast.error("Failed to simulate webhook");
+                        }
+                      } catch (err) {
+                        toast.error("Error simulating webhook");
+                      }
+                    }}
+                    className="w-full px-4 py-2 bg-yellow-100 text-yellow-800 rounded-md border border-yellow-300 hover:bg-yellow-200 transition-colors text-sm font-medium"
+                  >
+                    [DEV] Simulate Stripe Webhook
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>

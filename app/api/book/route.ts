@@ -2,8 +2,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sendBookingEmails } from "@/lib/emails";
-import { SERVICES, isServiceAvailable } from "@/lib/services.catalog";
 import { createBooking } from "@/lib/bookings";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
@@ -21,9 +21,10 @@ function ratelimit(ip: string) {
 
 // --- schema ---
 const schema = z.object({
-  service: z.enum(SERVICES),
+  service: z.string(),
   date: z.string().min(8), // YYYY-MM-DD 或 YYYY/MM/DD
   time: z.string().min(4), // HH:mm
+  duration: z.number().optional(), // In case the client sends it
   name: z.string().min(2),
   email: z.string().email(),
   phone: z.string().min(6),
@@ -33,6 +34,17 @@ const schema = z.object({
   package_code: z.string().optional(),
   addons: z.array(z.string()).optional(),
 });
+
+export async function OPTIONS(req: Request) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
 
 export async function POST(req: Request) {
   try {
@@ -51,8 +63,19 @@ export async function POST(req: Request) {
 
     const data = schema.parse(body);
 
-    // Additional validation: ensure service is available
-    if (!isServiceAvailable(data.service)) {
+    // Additional validation: ensure service is available in Supabase
+    const { data: serviceRow, error: serviceError } = await supabaseAdmin
+      .from("services")
+      .select("active")
+      .eq("name", data.service)
+      .maybeSingle();
+
+    if (serviceError) {
+      console.error("[/api/book] Error fetching service:", serviceError);
+    }
+
+    // We only block if we found the service and it's explicitly inactive
+    if (serviceRow && serviceRow.active === false) {
       return NextResponse.json(
         { error: "service_unavailable" },
         { status: 400 }
@@ -74,6 +97,7 @@ export async function POST(req: Request) {
       service: data.service,
       date: data.date,
       time: data.time,
+      duration: data.duration,
       name: data.name,
       email: data.email,
       phone: data.phone,
@@ -99,12 +123,18 @@ export async function POST(req: Request) {
       notes: result.data!.notes || "",
     }).catch((e) => console.error("[/api/book] email error:", e));
 
-    return NextResponse.json({ ok: true, id: result.data!.id });
+    return NextResponse.json(
+      { ok: true, id: result.data!.id },
+      { headers: { 'Access-Control-Allow-Origin': '*' } }
+    );
   } catch (e: any) {
     console.error("[/api/book] error:", e);
     const msg = e?.issues
       ? JSON.stringify(e.issues)
       : e?.message || "Unknown error";
-    return NextResponse.json({ error: msg }, { status: 400 });
+    return NextResponse.json(
+      { error: msg }, 
+      { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } }
+    );
   }
 }

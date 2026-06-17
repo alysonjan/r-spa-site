@@ -4,7 +4,6 @@ import utc from "dayjs/plugin/utc";
 import tz from "dayjs/plugin/timezone";
 import customParse from "dayjs/plugin/customParseFormat";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { DURATIONS } from "@/lib/services.catalog";
 
 dayjs.extend(utc);
 dayjs.extend(tz);
@@ -16,6 +15,7 @@ export type CreateBookingParams = {
   service: string;
   date: string;
   time: string;
+  duration?: number;
   name: string;
   email: string;
   phone: string;
@@ -54,6 +54,7 @@ export async function createBooking(
     service,
     date,
     time,
+    duration,
     name,
     email,
     phone,
@@ -72,7 +73,7 @@ export async function createBooking(
     return { success: false, error: "Invalid date/time" };
   }
 
-  const minutes = DURATIONS[service as keyof typeof DURATIONS] ?? 60;
+  const minutes = duration ?? 60;
   const endLocal = startLocal.add(minutes, "minute");
 
   const startISO = startLocal.utc().toISOString();

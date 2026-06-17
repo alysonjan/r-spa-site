@@ -76,7 +76,7 @@ export async function POST(req: Request) {
 // Gift Card Purchase Handler (Updated Version)
 // =====================================================
 
-async function handleGiftCardPurchase(session: any) {
+export async function handleGiftCardPurchase(session: any) {
   console.log("[webhook] Processing gift card purchase");
 
   const metadata = session.metadata;
