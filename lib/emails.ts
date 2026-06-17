@@ -64,7 +64,7 @@ const BCC_OWNER =
   (process.env.EMAIL_BCC_OWNER ??
     (process.env.NODE_ENV !== "production" ? "true" : "false")) === "true";
 
-const resend = new Resend(process.env.RESEND_API_KEY || "placeholder-key");
+const resend = new Resend(process.env.RESEND_API_KEY || "re_123456789");
 
 // =====================================================
 // Existing Email Functions
