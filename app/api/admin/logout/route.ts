@@ -6,11 +6,17 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function buildLogoutResponse(req: NextRequest) {
-  const url = req.nextUrl.clone();
-  url.pathname = "/admin/login";
-  url.searchParams.set("logged_out", "1");
-  url.searchParams.delete("t");
-  const res = NextResponse.redirect(url);
+  let baseUrl = process.env.NEXT_PUBLIC_SITE_URL || req.url;
+  // Ensure we don't accidentally append /admin/login to something like https://example.com/api/admin/logout
+  if (baseUrl === req.url) {
+    const parsed = new URL(req.url);
+    baseUrl = parsed.origin;
+  }
+  
+  const dest = new URL("/admin/login", baseUrl);
+  dest.searchParams.set("logged_out", "1");
+  
+  const res = NextResponse.redirect(dest);
   res.cookies.set(ADMIN_AUTH_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
