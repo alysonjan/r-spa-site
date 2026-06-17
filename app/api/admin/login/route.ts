@@ -47,7 +47,8 @@ export async function POST(req: NextRequest) {
   }
 
   const dest = sanitizeNextPath(next);
-  const res = NextResponse.redirect(new URL(dest, req.url), { status: 303 });
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || req.url;
+  const res = NextResponse.redirect(new URL(dest, baseUrl), { status: 303 });
   setSignedCookie(res);
   return res;
 }
@@ -71,7 +72,8 @@ export async function GET(req: NextRequest) {
   }
 
   const dest = sanitizeNextPath(searchParams.get("next") || "/admin");
-  const res = NextResponse.redirect(new URL(dest, req.url), { status: 303 });
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || req.url;
+  const res = NextResponse.redirect(new URL(dest, baseUrl), { status: 303 });
   setSignedCookie(res);
   return res;
 }
