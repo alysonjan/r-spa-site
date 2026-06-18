@@ -880,28 +880,9 @@ export default function BookingForm({
               </h3>
 
               {isServicesLoading ? (
-                <div className="space-y-6 animate-pulse">
-                  {/* Mobile Tabs Skeleton */}
-                  <div className="flex gap-2 border-b border-zinc-200 md:hidden pb-2">
-                    <div className="h-6 w-20 bg-zinc-200 rounded"></div>
-                    <div className="h-6 w-24 bg-zinc-200 rounded"></div>
-                  </div>
-                  
-                  {/* Title Skeleton */}
-                  <div className="h-4 w-32 bg-zinc-200 rounded md:block hidden"></div>
-                  
-                  {/* Cards Skeleton */}
-                  <div>
-                    <div className="h-3 w-40 bg-zinc-200 rounded mb-4"></div>
-                    <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
-                      {[...Array(6)].map((_, i) => (
-                        <div key={i} className="rounded-xl border-2 border-zinc-100 bg-zinc-50 p-4 h-[88px]">
-                          <div className="h-4 w-24 bg-zinc-200 rounded mb-2"></div>
-                          <div className="h-3 w-16 bg-zinc-200 rounded"></div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-900"></div>
+                  <p className="text-sm text-zinc-500">Loading services...</p>
                 </div>
               ) : (
                 <>
