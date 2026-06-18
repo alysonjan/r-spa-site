@@ -111,15 +111,12 @@ function UnifiedPricingBar() {
   );
 }
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 
 export const revalidate = 0;
 
 export default async function SpaPage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = await createClient();
 
   const { data: services, error } = await supabase
     .from("services")
@@ -147,7 +144,7 @@ export default async function SpaPage() {
               subtitle="Browse our full list of available treatments. Pricing and duration are clearly listed for each session."
             />
 
-            {['Standard Massage', 'Specialized Therapy', 'Therapies', 'Other'].map((catName) => {
+            {Array.from(new Set((services || []).map(s => s.category || 'Therapies'))).map((catName) => {
               const categoryServices = (services || []).filter(
                 s => (s.category || 'Therapies') === catName
               );
