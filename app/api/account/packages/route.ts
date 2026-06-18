@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     // Query package_purchases for this user
     const { data: purchases, error: queryError } = await supabaseAdmin
       .from("package_purchases")
-      .select("id, package_id, is_gift, recipient_name, recipient_email, amount_cents, currency, status, created_at, redeemed_at, is_test")
+      .select("id, package_code, is_gift, recipient_name, recipient_email, amount_cents, currency, status, created_at, redeemed_at, is_test")
       .eq("buyer_user_id", user.id)
       .order("created_at", { ascending: false });
 
@@ -34,12 +34,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "server_error" }, { status: 500 });
     }
 
-    const mappedPackages = (purchases || []).map(p => ({
-      ...p,
-      package_code: p.package_id
-    }));
-
-    return NextResponse.json({ packages: mappedPackages }, { status: 200 });
+    return NextResponse.json({ packages: purchases || [] }, { status: 200 });
   } catch (error: any) {
     console.error("[api/account/packages] Error:", error);
     return NextResponse.json({ error: "server_error" }, { status: 500 });

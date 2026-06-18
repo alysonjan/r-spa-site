@@ -63,10 +63,5 @@ export async function POST(req: NextRequest) {
   }
 
   // Single match found
-  const purchase = {
-    ...rows[0],
-    package_code: rows[0].package_id
-  };
-
-  return NextResponse.json({ purchase }, { status: 200 });
+  return NextResponse.json({ purchase: rows[0] }, { status: 200 });
 }
