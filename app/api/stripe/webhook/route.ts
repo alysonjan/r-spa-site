@@ -340,7 +340,7 @@ async function handlePackagePurchase(session: any) {
     .from("package_purchases")
     .insert({
       buyer_user_id: buyerUserId,
-      package_id: packageCode,
+      package_code: packageCode,
       is_gift: isGift,
       recipient_name: recipientName,
       recipient_email: recipientEmail,

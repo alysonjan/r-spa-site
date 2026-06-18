@@ -139,10 +139,9 @@ export default function BookingForm({
   const [suggestedTimes, setSuggestedTimes] = useState<string[]>([]);
 
   // Dynamic Services
-  const [dynamicCatalog, setDynamicCatalog] = useState<any[]>([]);
-  const [servicesByCategory, setServicesByCategory] = useState<any>({});
+  const [dynamicCatalog, setDynamicCatalog] = useState<any[]>(SERVICE_CATALOG);
+  const [servicesByCategory, setServicesByCategory] = useState<any>(SERVICES_BY_CATEGORY);
   const [massageTypes, setMassageTypes] = useState<any[]>([]);
-  const [isServicesLoading, setIsServicesLoading] = useState(true);
 
   useEffect(() => {
     fetch('/api/services')
@@ -205,11 +204,9 @@ export default function BookingForm({
              }
          });
          setMassageTypes(mTypes);
-         setIsServicesLoading(false);
       })
       .catch(err => {
          console.error('Failed to load dynamic services, using fallback:', err);
-         setIsServicesLoading(false);
       });
   }, []);
 
@@ -879,257 +876,196 @@ export default function BookingForm({
                 Choose Your Service
               </h3>
 
-              {isServicesLoading ? (
-                <div className="space-y-6 animate-pulse">
-                  {/* Mobile Tabs Skeleton */}
-                  <div className="flex gap-2 border-b border-zinc-200 md:hidden pb-2">
-                    <div className="h-6 w-20 bg-zinc-200 rounded"></div>
-                    <div className="h-6 w-24 bg-zinc-200 rounded"></div>
-                  </div>
-                  
-                  {/* Title Skeleton */}
-                  <div className="h-4 w-32 bg-zinc-200 rounded md:block hidden"></div>
-                  
-                  {/* Cards Skeleton */}
-                  <div>
-                    <div className="h-3 w-40 bg-zinc-200 rounded mb-4"></div>
-                    <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
-                      {[...Array(6)].map((_, i) => (
-                        <div key={i} className="rounded-xl border-2 border-zinc-100 bg-zinc-50 p-4 h-[88px]">
-                          <div className="h-4 w-24 bg-zinc-200 rounded mb-2"></div>
-                          <div className="h-3 w-16 bg-zinc-200 rounded"></div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {/* Mobile: Tabs for Massage | Therapies */}
-                  <div className="flex gap-2 border-b border-zinc-200 md:hidden">
-                    <button
-                      type="button"
-                      onClick={() => setActiveServiceTab("massage")}
-                      className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                        activeServiceTab === "massage"
-                          ? "border-zinc-900 text-zinc-900"
-                          : "border-transparent text-zinc-600 hover:text-zinc-900"
-                      }`}
-                    >
-                      Massage
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveServiceTab("therapy")}
-                      className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                        activeServiceTab === "therapy"
-                          ? "border-zinc-900 text-zinc-900"
-                          : "border-transparent text-zinc-600 hover:text-zinc-900"
-                      }`}
-                    >
-                      Therapies
-                    </button>
-                  </div>
+              {/* Mobile: Tabs for Massage | Therapies */}
+              <div className="flex gap-2 border-b border-zinc-200 md:hidden">
+                <button
+                  type="button"
+                  onClick={() => setActiveServiceTab("massage")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                    activeServiceTab === "massage"
+                      ? "border-zinc-900 text-zinc-900"
+                      : "border-transparent text-zinc-600 hover:text-zinc-900"
+                  }`}
+                >
+                  Massage
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveServiceTab("therapy")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                    activeServiceTab === "therapy"
+                      ? "border-zinc-900 text-zinc-900"
+                      : "border-transparent text-zinc-600 hover:text-zinc-900"
+                  }`}
+                >
+                  Therapies
+                </button>
+              </div>
 
-                  {/* Massage Selection (2-stage) */}
-                  {(activeServiceTab === "massage" || isDesktop) && (
-                    <div
-                      ref={massageSectionRef}
-                      className={`space-y-4 transition-opacity ${selectedTherapyService ? 'opacity-40' : ''}`}
-                    >
-                      <h4 className="text-sm font-semibold text-zinc-700 md:block hidden">
-                        Massage Services
-                      </h4>
+              {/* Massage Selection (2-stage) */}
+              {(activeServiceTab === "massage" || isDesktop) && (
+                <div
+                  ref={massageSectionRef}
+                  className={`space-y-4 transition-opacity ${selectedTherapyService ? 'opacity-40' : ''}`}
+                >
+                  <h4 className="text-sm font-semibold text-zinc-700 md:block hidden">
+                    Massage Services
+                  </h4>
 
-                      {selectedTherapyService && (
-                        <div className="flex items-center justify-between gap-3 bg-zinc-50 border border-zinc-200 rounded-lg p-3">
-                          <p className="text-xs text-zinc-700 flex-1">
-                            Therapy service selected.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={switchToMassage}
-                            className="px-3 py-1.5 bg-zinc-900 text-white text-xs font-medium rounded-lg hover:bg-zinc-800 transition"
-                            aria-label="Switch to massage services"
-                          >
-                            Switch to Massage
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Stage A: Choose massage type */}
-                      <div>
-                        <label className="block text-xs font-medium text-zinc-600 mb-2">
-                          1. Choose Massage Type
-                        </label>
-                        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
-                          {massageTypes.map((massageType) => {
-                            const services = servicesByCategory[massageType.category] || [];
-                            const hasServices = services.length > 0;
-                            const isSelected = selectedMassageType === massageType.key;
-                            const desc = services[0]?.description || "";
-
-                            if (!hasServices) return null;
-
-                            return (
-                              <button
-                                key={massageType.key}
-                                type="button"
-                                onClick={() => {
-                                  setSelectedTherapyService(null);
-                                  setSelectedMassageType(massageType.key);
-                                  setSelectedMassageMinutes(null);
-                                }}
-                                className={`relative text-left rounded-xl border-2 p-4 transition-all ${
-                                  isSelected
-                                    ? "border-zinc-900 bg-zinc-50"
-                                    : "border-zinc-200 bg-white hover:border-zinc-400"
-                                }`}
-                              >
-                                {isSelected && (
-                                  <div className="absolute top-3 right-3">
-                                    <div className="bg-zinc-900 rounded-full p-1">
-                                      <Check className="h-4 w-4 text-white" />
-                                    </div>
-                                  </div>
-                                )}
-                                <div className="pr-8">
-                                  <div className="font-semibold text-sm text-zinc-900 mb-1">
-                                    {massageType.label}
-                                  </div>
-                                  {desc && (
-                                    <p className="text-xs text-zinc-500">{desc}</p>
-                                  )}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Stage B: Choose duration (only show if type is selected) */}
-                      {selectedMassageType && (
-                        <div>
-                          <label className="block text-xs font-medium text-zinc-600 mb-2">
-                            2. Choose Duration
-                          </label>
-                          <div className="flex flex-wrap gap-3">
-                            {(() => {
-                              const services = servicesByCategory[selectedMassageType] || [];
-                              // Sort by duration length
-                              const sortedServices = [...services].sort((a, b) => a.minutes - b.minutes);
-
-                              return sortedServices.map((service) => {
-                                const mins = service.minutes;
-                                const isSelected = selectedMassageMinutes === mins;
-                                const price = service.priceCents / 100;
-
-                                return (
-                                  <button
-                                    key={service.name}
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedMassageMinutes(mins);
-                                      setSelectedTherapyService(null);
-                                    }}
-                                    className={`relative flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
-                                      isSelected
-                                        ? "border-zinc-900 bg-zinc-900 text-white shadow-md"
-                                        : "border-zinc-200 bg-white text-zinc-900 hover:border-zinc-400"
-                                    }`}
-                                    style={{ minWidth: '100px' }}
-                                  >
-                                    <span className="font-bold text-lg">{mins} <span className="text-sm font-normal opacity-80">min</span></span>
-                                    <span className={`text-xs mt-1 ${isSelected ? "text-zinc-300" : "text-zinc-500"}`}>
-                                      ${price}
-                                    </span>
-                                  </button>
-                                );
-                              });
-                            })()}
-                          </div>
-                        </div>
-                      )}
+                  {selectedTherapyService && (
+                    <div className="flex items-center justify-between gap-3 bg-zinc-50 border border-zinc-200 rounded-lg p-3">
+                      <p className="text-xs text-zinc-700 flex-1">
+                        Therapy service selected.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={switchToMassage}
+                        className="px-3 py-1.5 bg-zinc-900 text-white text-xs font-medium rounded-lg hover:bg-zinc-800 transition"
+                        aria-label="Switch to massage services"
+                      >
+                        Switch to Massage
+                      </button>
                     </div>
                   )}
 
-                  {/* Therapy Selection */}
-                  {(activeServiceTab === "therapy" || isDesktop) && (
-                    <div
-                      ref={therapySectionRef}
-                      className={`space-y-4 pt-4 md:pt-6 md:border-t border-zinc-200 transition-opacity ${selectedMassageType ? 'opacity-40' : ''}`}
-                    >
-                      <h4 className="text-sm font-semibold text-zinc-700 md:block hidden">
-                        Other Therapies
-                      </h4>
+                  {/* Stage A: Choose massage type */}
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-600 mb-2">
+                      1. Choose Massage Type
+                    </label>
+                    <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
+                      {massageTypes.map((massageType) => {
+                        const services = servicesByCategory[massageType.category] || [];
+                        const hasServices = services.length > 0;
+                        const isSelected = selectedMassageType === massageType.key;
+                        const desc = services[0]?.description || "";
 
-                      {selectedMassageType && (
-                        <div className="flex items-center justify-between gap-3 bg-zinc-50 border border-zinc-200 rounded-lg p-3">
-                          <p className="text-xs text-zinc-700 flex-1">
-                            Massage service selected.
-                          </p>
+                        if (!hasServices) return null;
+
+                        return (
                           <button
+                            key={massageType.key}
                             type="button"
-                            onClick={switchToTherapy}
-                            className="px-3 py-1.5 bg-zinc-900 text-white text-xs font-medium rounded-lg hover:bg-zinc-800 transition"
-                            aria-label="Switch to therapy services"
+                            onClick={() => {
+                              setSelectedTherapyService(null);
+                              setSelectedMassageType(massageType.key);
+                              setSelectedMassageMinutes(null);
+                            }}
+                            className={`relative text-left rounded-xl border-2 p-4 transition-all ${
+                              isSelected
+                                ? "border-zinc-900 bg-zinc-50"
+                                : "border-zinc-200 bg-white hover:border-zinc-400"
+                            }`}
                           >
-                            Switch to Therapies
+                            {isSelected && (
+                              <div className="absolute top-3 right-3">
+                                <div className="bg-zinc-900 rounded-full p-1">
+                                  <Check className="h-4 w-4 text-white" />
+                                </div>
+                              </div>
+                            )}
+                            <div className="pr-8">
+                              <div className="font-semibold text-sm text-zinc-900 mb-1">
+                                {massageType.label}
+                              </div>
+                              {desc && (
+                                <p className="text-xs text-zinc-500">{desc}</p>
+                              )}
+                            </div>
                           </button>
-                        </div>
-                      )}
+                        );
+                      })}
+                    </div>
+                  </div>
 
-                      <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+                  {/* Stage B: Choose duration (only show if type is selected) */}
+                  {selectedMassageType && (
+                    <div>
+                      <label className="block text-xs font-medium text-zinc-600 mb-2">
+                        2. Choose Duration
+                      </label>
+                      <div className="flex flex-wrap gap-3">
                         {(() => {
-                          const therapies = Object.keys(servicesByCategory)
-                            .filter(cat => cat !== "Massage" && cat !== "Specialized Therapy" && !massageTypes.find(m => m.category === cat))
-                            .flatMap(cat => servicesByCategory[cat])
-                            .sort((a, b) => a.priceCents - b.priceCents);
+                          const services = servicesByCategory[selectedMassageType] || [];
+                          // Sort by duration length
+                          const sortedServices = [...services].sort((a, b) => a.minutes - b.minutes);
 
-                          return therapies.map((service) => {
-                            const isSelected = selectedTherapyService === service.name;
+                          return sortedServices.map((service) => {
+                            const mins = service.minutes;
+                            const isSelected = selectedMassageMinutes === mins;
                             const price = service.priceCents / 100;
 
                             return (
                               <button
-                                key={service.name}
+                                key={mins}
                                 type="button"
                                 onClick={() => {
-                                  setSelectedMassageType(null);
-                                  setSelectedMassageMinutes(null);
-                                  setSelectedTherapyService(service.name);
+                                  setSelectedTherapyService(null);
+                                  setSelectedMassageMinutes(mins);
                                 }}
-                                className={`relative text-left rounded-xl border-2 p-4 transition-all ${
+                                className={`flex-1 min-w-[120px] rounded-xl border-2 p-4 transition-all ${
                                   isSelected
                                     ? "border-zinc-900 bg-zinc-50"
                                     : "border-zinc-200 bg-white hover:border-zinc-400"
                                 }`}
                               >
-                                {isSelected && (
-                                  <div className="absolute top-3 right-3">
-                                    <div className="bg-zinc-900 rounded-full p-1">
-                                      <Check className="h-4 w-4 text-white" />
-                                    </div>
+                                <div className="text-center">
+                                  <div className="font-semibold text-base text-zinc-900">
+                                    {mins} min
                                   </div>
-                                )}
-                                <div className="pr-8">
-                                  <div className="flex justify-between items-start gap-2 mb-1">
-                                    <div className="font-semibold text-sm text-zinc-900">
-                                      {service.name}
-                                    </div>
-                                    <div className="font-medium text-sm text-zinc-900 whitespace-nowrap">
-                                      ${price}
-                                    </div>
+                                  <div className="text-lg font-bold text-zinc-900 mt-1">
+                                    CA${price}
                                   </div>
-                                  {service.description && (
-                                    <p className="text-xs text-zinc-500 line-clamp-2">{service.description}</p>
-                                  )}
                                 </div>
                               </button>
                             );
                           });
                         })()}
                       </div>
+                      {selectedMassageType && !selectedMassageMinutes && submitAttempted && (
+                        <p className="text-xs text-red-600 mt-2">
+                          Please select a duration to continue.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Therapy Services */}
+              {(activeServiceTab === "therapy" || isDesktop) && servicesByCategory.therapy && (
+                <div
+                  ref={therapySectionRef}
+                  className={`space-y-3 transition-opacity ${selectedMassageType || selectedMassageMinutes ? 'opacity-40' : ''}`}
+                >
+                  <h4 className="text-sm font-semibold text-zinc-700">
+                    {CATEGORY_LABELS.therapy}
+                  </h4>
+
+                  {(selectedMassageType || selectedMassageMinutes) && (
+                    <div className="flex items-center justify-between gap-3 bg-zinc-50 border border-zinc-200 rounded-lg p-3">
+                      <p className="text-xs text-zinc-700 flex-1">
+                        Massage service selected.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={switchToTherapy}
+                        className="px-3 py-1.5 bg-zinc-900 text-white text-xs font-medium rounded-lg hover:bg-zinc-800 transition"
+                        aria-label="Switch to therapy services"
+                      >
+                        Switch to Therapy
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
+                    {servicesByCategory.therapy.map((service) => {
+                      const isSelected = selectedTherapyService === service.name;
+                      const price = service.priceCents / 100;
+
+                      return (
+                        <button
+                          key={service.name}
                           type="button"
                           onClick={() => {
                             setSelectedTherapyService(service.name);
