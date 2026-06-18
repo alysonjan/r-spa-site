@@ -162,7 +162,7 @@ export default function SignUpForm() {
       <form onSubmit={handleVerifyCode} className="space-y-4 max-w-xl">
         <h2 className="h2">Verify your email</h2>
         <p className="text-sm text-zinc-600">
-          We’ve sent a 6-digit verification code to <b>{form.email}</b>. (Check spam if not received.)
+          We’ve sent a verification code to <b>{form.email}</b>. (Check spam if not received.)
         </p>
         <div>
           <label className="block text-sm mb-1">Verification code</label>
@@ -170,7 +170,6 @@ export default function SignUpForm() {
             className="w-full"
             inputMode="numeric"
             pattern="[0-9]*"
-            maxLength={6}
             value={code}
             onChange={(e) => setCode(e.target.value)}
             required
