@@ -107,12 +107,30 @@ export default function SignUpForm() {
     setError(null);
     setLoading(true);
     try {
-      // 验证邮箱验证码
-      const { data, error } = await supabase.auth.verifyOtp({
+      // Try verifying with different token types because Supabase triggers different templates
+      let verifyRes = await supabase.auth.verifyOtp({
         email: form.email.trim(),
         token: code.trim(),
         type: "email",
       });
+      
+      if (verifyRes.error) {
+        verifyRes = await supabase.auth.verifyOtp({
+          email: form.email.trim(),
+          token: code.trim(),
+          type: "signup",
+        });
+      }
+      
+      if (verifyRes.error) {
+        verifyRes = await supabase.auth.verifyOtp({
+          email: form.email.trim(),
+          token: code.trim(),
+          type: "magiclink",
+        });
+      }
+      
+      const { data, error } = verifyRes;
       if (error) throw error;
       if (!data.session) throw new Error("No session after OTP verification.");
 
