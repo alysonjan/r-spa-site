@@ -60,6 +60,14 @@ export async function POST(req: Request) {
 
       // Otherwise, handle booking payment (existing logic)
       return await handleBookingPayment(session);
+    } else if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object as any;
+      const metadata = paymentIntent.metadata;
+
+      // Check if this is a gift card purchase from the mobile app
+      if (metadata?.type === "gift_card") {
+        return await handleGiftCardPurchase(paymentIntent);
+      }
     }
 
     return NextResponse.json({ ok: true });
@@ -87,8 +95,9 @@ export async function handleGiftCardPurchase(session: any) {
     return NextResponse.json({ error: "Invalid metadata" }, { status: 400 });
   }
 
-  // 获取 session 和 payment intent ID
-  const paymentIntentId = session.payment_intent as string;
+  // Get session and payment intent ID (handles both Checkout Session and Payment Intent objects)
+  const isPaymentIntent = session.object === 'payment_intent';
+  const paymentIntentId = isPaymentIntent ? session.id : (session.payment_intent as string);
   const sessionId = session.id;
   
   // ✅ 从 metadata 获取 sender 信息

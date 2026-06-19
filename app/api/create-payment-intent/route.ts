@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { createGiftCardMetadata } from "@/lib/gift-card-utils";
 
 export const runtime = "nodejs";
 
@@ -20,10 +21,31 @@ export async function OPTIONS(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const { amountCents, customerEmail, metadata } = await req.json();
+    const { amountCents, customerEmail, metadata, cards, sender_name, sender_phone } = await req.json();
 
     if (!amountCents) {
       return NextResponse.json({ error: "Amount is required" }, { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } });
+    }
+
+    let finalMetadata = { ...metadata };
+
+    if (cards && Array.isArray(cards)) {
+      const sanitizedCards = cards.map((card: any) => ({
+        amount: Math.round(card.amount || 0),
+        is_gift: Boolean(card.isGift),
+        recipient_email: card.isGift && card.recipientEmail ? card.recipientEmail.toLowerCase().trim() : "",
+        recipient_name: card.isGift && card.recipientName ? card.recipientName.trim() : "",
+        message: card.isGift && card.personalMessage ? card.personalMessage.substring(0, 200).trim() : "",
+      }));
+
+      finalMetadata = {
+        ...finalMetadata,
+        sender_name: sender_name || metadata?.purchaserName || customerEmail || "",
+        sender_email: customerEmail || "",
+        sender_phone: sender_phone || metadata?.purchaserPhone || "",
+        card_count: sanitizedCards.length.toString(),
+        ...createGiftCardMetadata(sanitizedCards)
+      };
     }
 
     // Create a PaymentIntent with the order amount and currency
@@ -31,7 +53,7 @@ export async function POST(req: Request) {
       amount: amountCents,
       currency: "cad",
       receipt_email: customerEmail,
-      metadata: metadata || {},
+      metadata: finalMetadata,
       // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
       automatic_payment_methods: {
         enabled: true,
