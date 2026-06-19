@@ -61,7 +61,10 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(
-      { clientSecret: paymentIntent.client_secret },
+      { 
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id 
+      },
       { headers: { 'Access-Control-Allow-Origin': '*' } }
     );
   } catch (error: any) {

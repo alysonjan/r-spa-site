@@ -984,3 +984,27 @@ export async function sendPackageGiftRecipientEmail(params: {
     },
   });
 }
+// ======= 5) 🧾 DONATION RECEIPT =======
+export async function sendDonationReceipt(
+  toEmail: string,
+  donorName: string,
+  amount: string,
+  transactionId: string,
+  date: string
+) {
+  const { subject, html } = buildEmailTemplate("donation_receipt", donorName, {
+    amount,
+    transactionId,
+    date,
+  });
+
+  const info = await transporter.sendMail({
+    from: FROM_ADDR,
+    to: toEmail,
+    subject,
+    html,
+  });
+
+  console.log(`[Email sent] Donation receipt sent to ${toEmail}. MessageID: ${info.messageId}`);
+  return { messageId: info.messageId };
+}

@@ -5,7 +5,8 @@ export type EmailTemplateType =
   | "payment_success" 
   | "class_reminder"
   | "gift_card_recipient"        
-  | "gift_card_purchase_confirm"; 
+  | "gift_card_purchase_confirm"
+  | "donation_receipt"; 
 
 export function buildEmailTemplate(
   type: EmailTemplateType,
@@ -35,6 +36,9 @@ export function buildEmailTemplate(
       isGift: boolean;
       recipientEmail: string;
     }>;
+    // Donation specific fields
+    transactionId?: string;
+    date?: string;
   }
 ) {
   const SITE_NAME = "Rejuvenessence";
@@ -438,6 +442,57 @@ export function buildEmailTemplate(
           <p style="margin:0;">
             <a href="mailto:${CONTACT_EMAIL}" 
               style="color:#667eea; text-decoration:underline;">Contact Support</a>
+          </p>
+        </div>
+
+        <p style="margin-top:32px; font-size:14px; color:#888;">— ${SITE_NAME}</p>
+        ${commonFooter}
+      `,
+    };
+  }
+
+  // 🧾 Donation Receipt Email
+  if (type === "donation_receipt") {
+    const { amount, transactionId, date } = data;
+    return {
+      subject: `Thank you for your donation! 💖`,
+      html: `
+        ${commonHeader}
+        <div style="text-align:center; margin:32px 0;">
+          <div style="font-size:48px; margin-bottom:16px;">💖</div>
+          <h2 style="color:#db2777; margin:0 0 8px;">Thank You!</h2>
+          <p style="color:#6b7280; margin:0; line-height: 1.5;">
+            Your generous contribution helps us continue providing exceptional services and meals.<br />
+            We truly appreciate your support.
+          </p>
+        </div>
+
+        <div style="background:#fdf2f8; border:2px solid #fbcfe8; padding:24px; border-radius:12px; margin:24px 0;">
+          <h3 style="font-size:18px; color:#9d174d; margin:0 0 16px; text-align:center;">Donation Receipt</h3>
+          
+          <table width="100%" style="font-size:15px; color:#374151;">
+            <tr>
+              <td style="padding:8px 0; border-bottom:1px solid #fbcfe8;"><strong>Donor:</strong></td>
+              <td style="padding:8px 0; border-bottom:1px solid #fbcfe8; text-align:right;">${name}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0; border-bottom:1px solid #fbcfe8;"><strong>Amount:</strong></td>
+              <td style="padding:8px 0; border-bottom:1px solid #fbcfe8; text-align:right; font-weight:700; color:#db2777;">$${amount}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0; border-bottom:1px solid #fbcfe8;"><strong>Date:</strong></td>
+              <td style="padding:8px 0; border-bottom:1px solid #fbcfe8; text-align:right;">${date}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;"><strong>Transaction ID:</strong></td>
+              <td style="padding:8px 0; text-align:right; font-family:monospace; font-size:13px; color:#6b7280;">${transactionId}</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="text-align:center; margin:32px 0;">
+          <p style="color:#6b7280; font-size:13px; margin:0;">
+            * This receipt is for your records. Please note that as a private business, donations are not tax-deductible.
           </p>
         </div>
 
