@@ -58,6 +58,23 @@ export async function POST(req: Request) {
         return await handlePackagePurchase(session);
       }
 
+      // Check if this is a donation (from mobile checkout)
+      if (metadata?.type === "donation") {
+        console.log("[webhook] Processing donation checkout session");
+        const { error } = await supabaseAdmin.from('donations').insert({
+          amount: (session.amount_total || 0) / 100,
+          donor_name: metadata.donor_name || 'Anonymous',
+          donor_email: metadata.donor_email || session.customer_email || '',
+          wants_receipt: metadata.wants_receipt === 'true',
+          stripe_payment_intent_id: session.payment_intent || session.id,
+          user_id: metadata.user_id || 'guest',
+        });
+        if (error) {
+          console.error("[webhook] Error inserting donation:", error);
+        }
+        return NextResponse.json({ ok: true });
+      }
+
       // Otherwise, handle booking payment (existing logic)
       return await handleBookingPayment(session);
     } else if (event.type === "payment_intent.succeeded") {

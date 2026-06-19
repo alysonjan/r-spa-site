@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountCents,
       currency: "cad",
-      receipt_email: customerEmail,
+      receipt_email: customerEmail?.trim() || undefined,
       metadata: finalMetadata,
       // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
       automatic_payment_methods: {
