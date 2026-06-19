@@ -68,6 +68,23 @@ export async function POST(req: Request) {
       if (metadata?.type === "gift_card") {
         return await handleGiftCardPurchase(paymentIntent);
       }
+
+      // Check if this is a donation
+      if (metadata?.type === "donation") {
+        console.log("[webhook] Processing mobile donation payment intent");
+        const { error } = await supabaseAdmin.from('donations').insert({
+          amount: paymentIntent.amount / 100, // Amount is in cents
+          donor_name: metadata.donor_name || 'Anonymous',
+          donor_email: metadata.donor_email || paymentIntent.receipt_email || '',
+          wants_receipt: metadata.wants_receipt === 'true',
+          stripe_payment_intent_id: paymentIntent.id,
+          user_id: metadata.user_id || 'guest',
+        });
+        if (error) {
+          console.error("[webhook] Error inserting donation:", error);
+        }
+        return NextResponse.json({ ok: true });
+      }
     }
 
     return NextResponse.json({ ok: true });

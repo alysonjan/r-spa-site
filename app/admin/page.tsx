@@ -4,13 +4,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { CalendarDays, Home, LogOut, GraduationCap, CreditCard, Users, X, Scissors } from "lucide-react";
+import { CalendarDays, Home, LogOut, GraduationCap, CreditCard, Users, X, Scissors, Heart } from "lucide-react";
 import AdminCalendar from "@/components/AdminCalendar";
 import ClassesManagement from "@/components/ClassesManagement";
 import GiftCardsManagement from "@/components/GiftCardsManagement";
 import ClientList from "@/components/ClientList";
 import ServicesManagement from "@/components/ServicesManagement";
 import BistroMenuManagement from "@/components/BistroMenuManagement";
+import DonationsManagement from "@/components/DonationsManagement";
 import AdminBookingDetailModal from "@/components/AdminBookingDetailModal";
 import toast from "react-hot-toast";
 
@@ -25,7 +26,7 @@ type Booking = {
   status: string;
 };
 
-type TabType = "bookings" | "classes" | "giftcards" | "clients" | "services" | "bistro";
+type TabType = "bookings" | "classes" | "giftcards" | "clients" | "services" | "bistro" | "donations";
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>("bookings");
@@ -50,7 +51,7 @@ export default function AdminPage() {
   // 🔄 Sync active tab with URL hash so refreshing doesn't lose your place
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
-    if (["bookings", "classes", "giftcards", "clients", "services", "bistro"].includes(hash)) {
+    if (["bookings", "classes", "giftcards", "clients", "services", "bistro", "donations"].includes(hash)) {
       setActiveTab(hash as TabType);
     }
   }, []);
@@ -251,6 +252,17 @@ export default function AdminPage() {
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-coffee"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg>
             Bistro Menu
           </button>
+          <button
+            onClick={() => setActiveTab("donations")}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 ${
+              activeTab === "donations"
+                ? "bg-pink-100 text-pink-700 font-medium"
+                : "hover:bg-zinc-100"
+            }`}
+          >
+            <Heart className="h-4 w-4" />
+            Donations
+          </button>
 
           <Link href="/" className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-zinc-100">
             <Home className="h-4 w-4" />
@@ -334,6 +346,16 @@ export default function AdminPage() {
                   }`}
                 >
                   Bistro
+                </button>
+                <button
+                  onClick={() => setActiveTab("donations")}
+                  className={`flex-none min-w-[100px] px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "donations"
+                      ? "bg-pink-600 text-white"
+                      : "text-zinc-600 hover:bg-zinc-100"
+                  }`}
+                >
+                  Donations
                 </button>
               </div>
             </div>
@@ -477,6 +499,23 @@ export default function AdminPage() {
                 {activeTab === "services" && <ServicesManagement />}
                 {activeTab === "bistro" && <BistroMenuManagement />}
               </div>
+            </motion.div>
+          )}
+
+          {/* Donations Tab */}
+          {activeTab === "donations" && (
+            <motion.div
+              key="donations"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <div>
+                <h1 className="text-2xl font-semibold">Donations Tracking</h1>
+              </div>
+              <DonationsManagement />
             </motion.div>
           )}
         </div>
