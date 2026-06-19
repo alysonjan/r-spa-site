@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
 import toast from "react-hot-toast";
 import { Heart, Search } from "lucide-react";
 
@@ -111,7 +110,7 @@ export default function DonationsManagement() {
                 filteredDonations.map((donation) => (
                   <tr key={donation.id} className="hover:bg-zinc-50 transition">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {format(new Date(donation.created_at), "MMM d, yyyy h:mm a")}
+                      {new Date(donation.created_at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
                     </td>
                     <td className="px-6 py-4 font-medium">{donation.donor_name}</td>
                     <td className="px-6 py-4">{donation.donor_email || "-"}</td>
