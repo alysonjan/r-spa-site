@@ -5,25 +5,40 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Gift, X, ArrowRight } from "lucide-react";
 
-const OFFER_LABELS: Record<string, string> = {
-  "hydro-upgrade": "Hydro Upgrade +15min",
-  "giftcard-bonus": "Gift Card Bonus",
-  "refer-friend": "Refer a Friend",
-  "holiday-packages": "Holiday Packages",
+type SpecialOffer = {
+  code: string;
+  title: string;
+  type: string;
 };
 
 export default function OfferStatusBar() {
   const [mounted, setMounted] = useState(false);
   const [offerCode, setOfferCode] = useState<string | null>(null);
+  const [offerTitle, setOfferTitle] = useState<string | null>(null);
+  const [isGiftCardOffer, setIsGiftCardOffer] = useState(false);
   const router = useRouter();
 
   // Load offer from localStorage
-  const loadOffer = () => {
+  const loadOffer = async () => {
     try {
       const code = localStorage.getItem("christmas_offer_selected");
       setOfferCode(code);
+      if (code) {
+        // Fetch title dynamically
+        const res = await fetch("/api/special-offers");
+        const json = await res.json();
+        if (json.success && json.offers) {
+          const matched = json.offers.find((o: SpecialOffer) => o.code === code);
+          if (matched) {
+            setOfferTitle(matched.title);
+            setIsGiftCardOffer(matched.type === "giftcard");
+          }
+        }
+      } else {
+        setOfferTitle(null);
+      }
     } catch (e) {
-      // localStorage not available
+      // API or localStorage failed
     }
   };
 
@@ -64,13 +79,7 @@ export default function OfferStatusBar() {
 
   if (!mounted || !offerCode) return null;
 
-  const offerLabel = OFFER_LABELS[offerCode] || offerCode;
-
-  // Determine if this is a gift card offer
-  const isGiftCardOffer =
-    offerCode === "giftcard-bonus" ||
-    offerCode.toLowerCase().includes("gift") ||
-    offerCode.toLowerCase().includes("giftcard");
+  const offerLabel = offerTitle || offerCode;
 
   const handleAction = () => {
     router.push(isGiftCardOffer ? "/giftcard/purchase" : "/booking");

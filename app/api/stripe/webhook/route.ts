@@ -12,7 +12,7 @@ import {
   parseGiftCardMetadata,
   dollarsToCents,
 } from "@/lib/gift-card-utils";
-import { getPackageByCode } from "@/lib/packages.catalog";
+import { getPackageByCode } from "@/lib/packages-db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,8 +58,50 @@ export async function POST(req: Request) {
         return await handlePackagePurchase(session);
       }
 
+      // Check if this is a donation (from mobile checkout)
+      if (metadata?.type === "donation") {
+        console.log("[webhook] Processing donation checkout session");
+        const { error } = await supabaseAdmin.from('donations').insert({
+          amount: (session.amount_total || 0) / 100,
+          donor_name: metadata.donor_name || 'Anonymous',
+          donor_email: metadata.donor_email || session.customer_email || '',
+          wants_receipt: metadata.wants_receipt === 'true',
+          stripe_payment_intent_id: session.payment_intent || session.id,
+          user_id: metadata.user_id || 'guest',
+        });
+        if (error) {
+          console.error("[webhook] Error inserting donation:", error);
+        }
+        return NextResponse.json({ ok: true });
+      }
+
       // Otherwise, handle booking payment (existing logic)
       return await handleBookingPayment(session);
+    } else if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object as any;
+      const metadata = paymentIntent.metadata;
+
+      // Check if this is a gift card purchase from the mobile app
+      if (metadata?.type === "gift_card") {
+        return await handleGiftCardPurchase(paymentIntent);
+      }
+
+      // Check if this is a donation
+      if (metadata?.type === "donation") {
+        console.log("[webhook] Processing mobile donation payment intent");
+        const { error } = await supabaseAdmin.from('donations').insert({
+          amount: paymentIntent.amount / 100, // Amount is in cents
+          donor_name: metadata.donor_name || 'Anonymous',
+          donor_email: metadata.donor_email || paymentIntent.receipt_email || '',
+          wants_receipt: metadata.wants_receipt === 'true',
+          stripe_payment_intent_id: paymentIntent.id,
+          user_id: metadata.user_id || 'guest',
+        });
+        if (error) {
+          console.error("[webhook] Error inserting donation:", error);
+        }
+        return NextResponse.json({ ok: true });
+      }
     }
 
     return NextResponse.json({ ok: true });
@@ -87,8 +129,9 @@ export async function handleGiftCardPurchase(session: any) {
     return NextResponse.json({ error: "Invalid metadata" }, { status: 400 });
   }
 
-  // 获取 session 和 payment intent ID
-  const paymentIntentId = session.payment_intent as string;
+  // Get session and payment intent ID (handles both Checkout Session and Payment Intent objects)
+  const isPaymentIntent = session.object === 'payment_intent';
+  const paymentIntentId = isPaymentIntent ? session.id : (session.payment_intent as string);
   const sessionId = session.id;
   
   // ✅ 从 metadata 获取 sender 信息
@@ -368,7 +411,7 @@ async function handlePackagePurchase(session: any) {
   console.log("[webhook] Package purchase created:", purchase.id);
 
   // Get package details from catalog
-  const pkg = getPackageByCode(packageCode);
+  const pkg = await getPackageByCode(packageCode);
   const packageName = pkg?.name || packageCode;
 
   // Get buyer email from Stripe session first (most reliable), fallback to Supabase profile

@@ -114,6 +114,7 @@ export default function BookingForm({
   const [selectedOfferCode, setSelectedOfferCode] = useState<string | null>(
     null,
   );
+  const [selectedOfferTitle, setSelectedOfferTitle] = useState<string | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
 
   // Service selection (mutually exclusive)
@@ -326,10 +327,20 @@ export default function BookingForm({
   // Handle localStorage offer
   useEffect(() => {
     // Load offer from localStorage
-    const loadOffer = () => {
+    const loadOffer = async () => {
       try {
         const offerCode = localStorage.getItem("christmas_offer_selected");
         setSelectedOfferCode(offerCode);
+        if (offerCode) {
+          const res = await fetch("/api/special-offers");
+          const json = await res.json();
+          if (json.success && json.offers) {
+            const matched = json.offers.find((o: any) => o.code === offerCode);
+            if (matched) {
+              setSelectedOfferTitle(matched.title);
+            }
+          }
+        }
       } catch (e) {
         // localStorage not available
       }
@@ -1478,7 +1489,7 @@ export default function BookingForm({
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-purple-900">
-                    🎁 Offer Applied: {selectedOfferCode}
+                    🎁 Offer Applied: {selectedOfferTitle || selectedOfferCode}
                   </p>
                   <p className="text-xs text-purple-700 mt-1">
                     This offer will be included with your booking

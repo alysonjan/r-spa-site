@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getPackageByCode } from "@/lib/packages.catalog";
+
 import toast from "react-hot-toast";
 
 type PackagePurchase = {
@@ -23,6 +23,7 @@ type PackagePurchase = {
 export default function PackagesSection() {
   const supabase = createClient();
   const [packages, setPackages] = useState<PackagePurchase[]>([]);
+  const [catalog, setCatalog] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +60,15 @@ export default function PackagesSection() {
 
       const data = await res.json();
       setPackages(data.packages || []);
+
+      // Also fetch the catalog to map names
+      const { data: catalogData } = await supabase.from("holiday_packages").select("code, name");
+      if (catalogData) {
+        const catMap: Record<string, any> = {};
+        catalogData.forEach(p => catMap[p.code] = p);
+        setCatalog(catMap);
+      }
+
     } catch (err: any) {
       console.error("Failed to load packages:", err);
       setError(err.message || "Failed to load packages");
@@ -134,7 +144,7 @@ export default function PackagesSection() {
       ) : (
         <div className="mt-6 space-y-4">
           {packages.map((pkg) => {
-            const catalogPkg = getPackageByCode(pkg.package_code);
+            const catalogPkg = catalog[pkg.package_code];
             const packageName = catalogPkg?.name || pkg.package_code;
             const isRedeemed = pkg.status === "redeemed" || pkg.redeemed_at !== null;
             const isTest = Boolean(pkg.is_test);
