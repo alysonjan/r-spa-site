@@ -7,7 +7,7 @@ import {
   getLiveTestEmails,
 } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { getPackageByCode, isPackageAvailable } from "@/lib/packages.catalog";
+import { getPackageByCode } from "@/lib/packages-db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -79,17 +79,21 @@ export async function POST(req: NextRequest) {
     const { packageCode, isGift, recipientName, recipientEmail, message } =
       body;
 
-    const pkg = getPackageByCode(packageCode);
+    const pkg = await getPackageByCode(packageCode);
     if (!pkg) {
       return NextResponse.json({ error: "Package not found" }, { status: 404 });
     }
 
-    if (!isPackageAvailable(packageCode)) {
+    const now = new Date();
+    const isAvailable = pkg.available && (!pkg.activeTo || new Date(pkg.activeTo) > now);
+
+    if (!isAvailable) {
       return NextResponse.json(
         { error: "Package is no longer available for purchase" },
         { status: 400 },
       );
     }
+
 
     if (isGift && (!recipientName?.trim() || !recipientEmail?.trim())) {
       return NextResponse.json(

@@ -8,51 +8,36 @@ import toast from "react-hot-toast";
 
 type Offer = {
   id: string;
+  code: string;
   title: string;
   description: string;
-  type: "addon" | "giftcard" | "referral" | "packages";
-  actionLabel?: string;
+  type: string;
+  action_label?: string;
 };
-
-const OFFERS: Offer[] = [
-  {
-    id: "hydro-upgrade",
-    title: "Hydro Upgrade +15min",
-    description: "Add 15 extra minutes of relaxing hydrotherapy to any service",
-    type: "addon",
-    actionLabel: "Apply Add-on",
-  },
-  {
-    id: "giftcard-bonus",
-    title: "Buy $200 Gift Card → Get $20 Bonus",
-    description: "Purchase a $200 gift card and receive an extra $20 value",
-    type: "giftcard",
-    actionLabel: "Apply Offer",
-  },
-  {
-    id: "refer-friend",
-    title: "Refer a Friend → Both Get +15min Hot Tub",
-    description:
-      "Share the wellness! You and your friend both enjoy 15 minutes extra",
-    type: "referral",
-    actionLabel: "Apply Referral",
-  },
-  {
-    id: "holiday-packages",
-    title: "Holiday Packages",
-    description: "Exclusive seasonal wellness packages for the perfect gift",
-    type: "packages",
-    actionLabel: "View Packages",
-  },
-];
 
 export default function ChristmasOfferFloating() {
   const [modalOpen, setModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
+    
+    // Fetch active offers via our backend API to bypass any RLS issues
+    const fetchOffers = async () => {
+      try {
+        const res = await fetch("/api/special-offers");
+        const json = await res.json();
+        if (json.success && json.offers) {
+          setOffers(json.offers);
+        }
+      } catch (err) {
+        console.error("Failed to fetch special offers:", err);
+      }
+    };
+    
+    fetchOffers();
   }, []);
 
   useEffect(() => {
@@ -90,7 +75,7 @@ export default function ChristmasOfferFloating() {
 
     // Save to localStorage
     try {
-      localStorage.setItem("christmas_offer_selected", offer.id);
+      localStorage.setItem("christmas_offer_selected", offer.code);
       window.dispatchEvent(new Event("offer:changed"));
       toast.success(`${offer.title} applied! 🎄`, {
         duration: 3000,
@@ -204,7 +189,7 @@ export default function ChristmasOfferFloating() {
 
               {/* Offers Grid */}
               <div className="p-6 grid gap-4 md:grid-cols-2">
-                {OFFERS.map((offer, index) => (
+                {offers.map((offer, index) => (
                   <motion.div
                     key={offer.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -232,7 +217,7 @@ export default function ChristmasOfferFloating() {
                           : "bg-emerald-600 text-white hover:bg-emerald-700"
                       }`}
                     >
-                      {offer.actionLabel || "Apply"}
+                      {offer.action_label || "Apply"}
                     </button>
                   </motion.div>
                 ))}

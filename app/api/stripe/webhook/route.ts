@@ -12,7 +12,7 @@ import {
   parseGiftCardMetadata,
   dollarsToCents,
 } from "@/lib/gift-card-utils";
-import { getPackageByCode } from "@/lib/packages.catalog";
+import { getPackageByCode } from "@/lib/packages-db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -411,7 +411,7 @@ async function handlePackagePurchase(session: any) {
   console.log("[webhook] Package purchase created:", purchase.id);
 
   // Get package details from catalog
-  const pkg = getPackageByCode(packageCode);
+  const pkg = await getPackageByCode(packageCode);
   const packageName = pkg?.name || packageCode;
 
   // Get buyer email from Stripe session first (most reliable), fallback to Supabase profile

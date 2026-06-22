@@ -13,6 +13,8 @@ import ServicesManagement from "@/components/ServicesManagement";
 import BistroMenuManagement from "@/components/BistroMenuManagement";
 import DonationsManagement from "@/components/DonationsManagement";
 import AdminBookingDetailModal from "@/components/AdminBookingDetailModal";
+import HolidayPackagesManagement from "@/components/admin/HolidayPackagesManagement";
+import SpecialOffersManagement from "@/components/admin/SpecialOffersManagement";
 import toast from "react-hot-toast";
 
 type Booking = {
@@ -26,7 +28,7 @@ type Booking = {
   status: string;
 };
 
-type TabType = "bookings" | "classes" | "giftcards" | "clients" | "services" | "bistro" | "donations";
+type TabType = "bookings" | "classes" | "giftcards" | "clients" | "services" | "bistro" | "donations" | "packages" | "offers";
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>("bookings");
@@ -51,7 +53,7 @@ export default function AdminPage() {
   // 🔄 Sync active tab with URL hash so refreshing doesn't lose your place
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
-    if (["bookings", "classes", "giftcards", "clients", "services", "bistro", "donations"].includes(hash)) {
+    if (["bookings", "classes", "giftcards", "clients", "services", "bistro", "donations", "packages", "offers"].includes(hash)) {
       setActiveTab(hash as TabType);
     }
   }, []);
@@ -263,6 +265,29 @@ export default function AdminPage() {
             <Heart className="h-4 w-4" />
             Donations
           </button>
+          <button
+            onClick={() => setActiveTab("packages")}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 ${
+              activeTab === "packages"
+                ? "bg-emerald-100 text-emerald-700 font-medium"
+                : "hover:bg-zinc-100"
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-package-search"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/><circle cx="18.5" cy="15.5" r="2.5"/><path d="M20.27 17.27 22 19"/></svg>
+            Holiday Packages
+          </button>
+
+          <button
+            onClick={() => setActiveTab("offers")}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 ${
+              activeTab === "offers"
+                ? "bg-red-100 text-red-700 font-medium"
+                : "hover:bg-zinc-100"
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gift"><polyline points="20 12 20 22 4 22 4 12"/><rect width="20" height="5" x="2" y="7"/><line x1="12" x2="12" y1="22" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+            Special Offers
+          </button>
 
           <Link href="/" className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-zinc-100">
             <Home className="h-4 w-4" />
@@ -357,6 +382,26 @@ export default function AdminPage() {
                 >
                   Donations
                 </button>
+                <button
+                  onClick={() => setActiveTab("packages")}
+                  className={`flex-none min-w-[100px] px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "packages"
+                      ? "bg-emerald-600 text-white"
+                      : "text-zinc-600 hover:bg-zinc-100"
+                  }`}
+                >
+                  Holiday Pkgs
+                </button>
+                <button
+                  onClick={() => setActiveTab("offers")}
+                  className={`flex-none min-w-[100px] px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "offers"
+                      ? "bg-red-600 text-white"
+                      : "text-zinc-600 hover:bg-zinc-100"
+                  }`}
+                >
+                  Offers
+                </button>
               </div>
             </div>
           </div>
@@ -432,6 +477,34 @@ export default function AdminPage() {
                   ))}
                 </ul>
               </section>
+            </motion.div>
+          )}
+
+          {/* Holiday Packages Tab */}
+          {activeTab === "packages" && (
+            <motion.div
+              key="packages"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <HolidayPackagesManagement />
+            </motion.div>
+          )}
+
+          {/* Special Offers Tab */}
+          {activeTab === "offers" && (
+            <motion.div
+              key="offers"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <SpecialOffersManagement />
             </motion.div>
           )}
 

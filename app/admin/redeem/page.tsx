@@ -1,8 +1,9 @@
 // app/admin/redeem/page.tsx
 "use client";
 
-import { useState } from "react";
-import { getPackageByCode } from "@/lib/packages.catalog";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+
 import toast from "react-hot-toast";
 
 type PackagePurchase = {
@@ -24,10 +25,24 @@ type PackagePurchase = {
 
 export default function AdminRedeemPage() {
   const [code, setCode] = useState("");
+  const [catalog, setCatalog] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
   const [purchase, setPurchase] = useState<PackagePurchase | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    // Fetch catalog on mount
+    supabase.from("holiday_packages").select("code, name").then(({ data }) => {
+      if (data) {
+        const catMap: Record<string, any> = {};
+        data.forEach(p => catMap[p.code] = p);
+        setCatalog(catMap);
+      }
+    });
+  }, [supabase]);
 
   async function handleLookup(e: React.FormEvent) {
     e.preventDefault();
@@ -251,7 +266,7 @@ export default function AdminRedeemPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h2 className="text-2xl font-bold">
-                      {getPackageByCode(purchase.package_code)?.name || purchase.package_code}
+                      {catalog[purchase.package_code]?.name || purchase.package_code}
                     </h2>
                     <p className="text-white/80 text-sm mt-1">Package Details</p>
                   </div>

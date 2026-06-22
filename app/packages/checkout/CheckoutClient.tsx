@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { getPackageByCode, formatPackagePrice, isPackageAvailable, type PackageCatalogItem } from "@/lib/packages.catalog";
+import { formatPackagePrice, type PackageCatalogItem } from "@/lib/packages-db";
 
 export default function CheckoutClient() {
   const searchParams = useSearchParams();
@@ -46,22 +46,30 @@ export default function CheckoutClient() {
           return;
         }
 
-        // Load package data
-        const packageData = getPackageByCode(packageCode);
-        if (!packageData) {
-          setError("Package not found.");
+        // Load package data from our new API to bypass RLS
+        const res = await fetch(`/api/holiday-packages/${packageCode}`);
+        const json = await res.json();
+
+        if (!res.ok || !json.success || !json.package) {
+          setError(json.error || "Package not found or no longer available.");
           setIsCheckingAuth(false);
           return;
         }
 
-        // Check if package is still available for purchase
-        if (!isPackageAvailable(packageCode)) {
-          setError("This package is no longer available for purchase.");
-          setIsCheckingAuth(false);
-          return;
-        }
+        const row = json.package;
 
-        setPkg(packageData);
+        setPkg({
+          id: row.id,
+          code: row.code,
+          name: row.name,
+          priceCents: row.priceCents,
+          shortDesc: row.shortDesc,
+          inclusions: row.inclusions,
+          highlight: row.highlight,
+          finePrint: row.finePrint,
+          available: row.available,
+          activeTo: row.activeTo,
+        });
       } catch (e) {
         setError("An error occurred. Please try again.");
       } finally {

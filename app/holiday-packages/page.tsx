@@ -1,6 +1,6 @@
 // app/holiday-packages/page.tsx
 import { Suspense } from "react";
-import { PACKAGE_CATALOG } from "@/lib/packages.catalog";
+import { getActivePackages } from "@/lib/packages-db";
 import HolidayPackagesClient from "./HolidayPackagesClient";
 
 export const metadata = {
@@ -9,12 +9,14 @@ export const metadata = {
     "Exclusive seasonal wellness packages - the perfect gift for yourself or loved ones.",
 };
 
-export default function HolidayPackagesPage() {
+export default async function HolidayPackagesPage() {
+  const packages = await getActivePackages();
+  
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white">
       {/* Packages Grid - wrapped in Suspense to handle searchParams */}
       <Suspense fallback={<PackagesLoadingFallback />}>
-        <HolidayPackagesClient packages={PACKAGE_CATALOG} />
+        <HolidayPackagesClient packages={packages} />
       </Suspense>
     </div>
   );

@@ -66,7 +66,7 @@ export async function POST(req: Request) {
     // Additional validation: ensure service is available in Supabase
     const { data: serviceRow, error: serviceError } = await supabaseAdmin
       .from("services")
-      .select("active")
+      .select("is_active")
       .eq("name", data.service)
       .maybeSingle();
 
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     }
 
     // We only block if we found the service and it's explicitly inactive
-    if (serviceRow && serviceRow.active === false) {
+    if (serviceRow && serviceRow.is_active === false) {
       return NextResponse.json(
         { error: "service_unavailable" },
         { status: 400 }
