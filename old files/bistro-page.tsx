@@ -38,13 +38,9 @@ function FoodGrid({ items }: { items: any[] }) {
                 className="object-cover"
               />
             ) : (
-              <Image
-                src="/placeholder.png"
-                alt="No image"
-                fill
-                sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
-                className="object-cover opacity-70 p-4"
-              />
+               <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                 <span className="text-sm">No Image</span>
+               </div>
             )}
           </div>
           <div className="p-4 flex-grow flex flex-col">
@@ -118,7 +114,6 @@ export default async function BistroPage() {
   return (
     <>
       <Section eyebrow="BISTRO" title="281 Bistro">
-        {/*
         <p className="max-w-3xl text-lg text-zinc-600 leading-relaxed md:leading-8">
           Rejuvenessence Bistro, proudly features the licious, tantalizing, delicacies
           of the highly accredited chef Todd which engenders an additional pleasurable
@@ -128,7 +123,6 @@ export default async function BistroPage() {
           <Link href="/booking" className="btn btn-primary">Reserve seating</Link>
           <Link href="/policies" className="btn btn-ghost">Policies</Link>
         </div>
-        */}
       </Section>
 
       {allItems.length === 0 ? (
