@@ -57,16 +57,16 @@ export default function HomePage() {
       <Hero />
 
 
-      <Section>
-          <Split
-            image="/licenses/1.jpg" // 先用第一张做预览图，可随时换
-            title="Licensed • Insured • Professional"
-            desc="Seqex is licensed by Health Canada (Class II). View our certifications and compliance details."
-            cta={{ href: "/licenses", label: "View certificates" }} // 跳转新页面
-            // flip 可按喜好调整，false=图左文右；true=图右文左
-            flip={false}
-          />
-      </Section>
+      {/* <Section>
+        <Split
+          image="/licenses/1.jpg" // 先用第一张做预览图，可随时换
+          title="Licensed • Insured • Professional"
+          desc="Seqex is licensed by Health Canada (Class II). View our certifications and compliance details."
+          cta={{ href: "/licenses", label: "View certificates" }} // 跳转新页面
+          // flip 可按喜好调整，false=图左文右；true=图右文左
+          flip={false}
+        />
+      </Section> */}
 
       {/* 图片自动轮播 */}
       <Section eyebrow="Gallery" title="A calm space for your time">
@@ -90,19 +90,20 @@ export default function HomePage() {
           ]}
           auto
           interval={4500}
-          aspect={16/9} //或 4/3， 1
+          aspect={16 / 9} //或 4/3， 1
         />
       </Section>
 
       {/* 图 + 文：Seqex / 光疗 */}
-      <Section>
+      {/* <Section>
         <Split
           image="/gallery/seqex.jpg"
           title="Seqex & Plasma Light Therapies"
           desc="Modern devices including Seqex sessions, plasma lights (RX1/RX6), Vitamin-D UVB and more."
           cta={{ href: "/learn-more", label: "Learn more" }}
         />
-      </Section>
+      </Section> */}
+
 
       {/* 图 + 文：Spa */}
       <Section>

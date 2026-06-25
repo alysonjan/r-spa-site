@@ -297,9 +297,7 @@ export default function BistroMenuManagement() {
                       {item.image_url ? (
                         <img src={item.image_url} alt={item.item_name} className="w-12 h-12 rounded object-cover border border-zinc-200" />
                       ) : (
-                        <div className="w-12 h-12 rounded bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-400">
-                          <ImageIcon className="w-5 h-5" />
-                        </div>
+                        <img src="/placeholder.png" alt="No image" className="w-12 h-12 rounded object-cover border border-zinc-200 opacity-70 p-2" />
                       )}
                     </td>
                     <td className="px-4 py-3 font-medium text-zinc-900">
@@ -468,8 +466,8 @@ export default function BistroMenuManagement() {
                           <img src={currentItem.image_url} alt="Current" className="w-full h-full object-cover" />
                         </div>
                       ) : (
-                        <div className="w-16 h-16 rounded bg-zinc-100 flex items-center justify-center border border-zinc-200 text-zinc-400">
-                          <ImageIcon className="w-6 h-6" />
+                        <div className="w-16 h-16 rounded overflow-hidden border border-zinc-200 bg-zinc-50">
+                          <img src="/placeholder.png" alt="No image" className="w-full h-full object-cover opacity-70 p-2" />
                         </div>
                       )}
                       <div>
@@ -482,13 +480,28 @@ export default function BistroMenuManagement() {
                             if (e.target.files && e.target.files[0]) setImageFile(e.target.files[0]);
                           }}
                         />
-                        <button 
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-medium rounded transition-colors"
-                        >
-                          Choose Image
-                        </button>
+                        <div className="flex gap-2">
+                          <button 
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-medium rounded transition-colors"
+                          >
+                            Choose Image
+                          </button>
+                          {(imageFile || currentItem.image_url) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setImageFile(null);
+                                setCurrentItem({ ...currentItem, image_url: "" });
+                                if (fileInputRef.current) fileInputRef.current.value = "";
+                              }}
+                              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-medium rounded transition-colors"
+                            >
+                              Clear Image
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

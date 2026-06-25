@@ -15,6 +15,7 @@ import DonationsManagement from "@/components/DonationsManagement";
 import AdminBookingDetailModal from "@/components/AdminBookingDetailModal";
 import HolidayPackagesManagement from "@/components/admin/HolidayPackagesManagement";
 import SpecialOffersManagement from "@/components/admin/SpecialOffersManagement";
+import NewsletterManagement from "@/components/admin/NewsletterManagement";
 import toast from "react-hot-toast";
 
 type Booking = {
@@ -28,7 +29,7 @@ type Booking = {
   status: string;
 };
 
-type TabType = "bookings" | "classes" | "giftcards" | "clients" | "services" | "bistro" | "donations" | "packages" | "offers";
+type TabType = "bookings" | "classes" | "giftcards" | "clients" | "services" | "bistro" | "donations" | "packages" | "offers" | "newsletter";
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>("bookings");
@@ -289,6 +290,18 @@ export default function AdminPage() {
             Special Offers
           </button>
 
+          <button
+            onClick={() => setActiveTab("newsletter")}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 ${
+              activeTab === "newsletter"
+                ? "bg-blue-100 text-blue-700 font-medium"
+                : "hover:bg-zinc-100"
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            Newsletter
+          </button>
+
           <Link href="/" className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-zinc-100">
             <Home className="h-4 w-4" />
             Back to site
@@ -400,7 +413,17 @@ export default function AdminPage() {
                       : "text-zinc-600 hover:bg-zinc-100"
                   }`}
                 >
-                  Offers
+                  Special Offers
+                </button>
+                <button
+                  onClick={() => setActiveTab("newsletter")}
+                  className={`flex-none min-w-[100px] px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "newsletter"
+                      ? "bg-blue-600 text-white"
+                      : "text-zinc-600 hover:bg-zinc-100"
+                  }`}
+                >
+                  Newsletter
                 </button>
               </div>
             </div>
@@ -505,6 +528,20 @@ export default function AdminPage() {
               className="space-y-6"
             >
               <SpecialOffersManagement />
+            </motion.div>
+          )}
+
+          {/* Newsletter Tab */}
+          {activeTab === "newsletter" && (
+            <motion.div
+              key="newsletter"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              <NewsletterManagement />
             </motion.div>
           )}
 
