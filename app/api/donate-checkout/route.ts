@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 
 export async function POST(request: Request) {
   try {
-    const { amountCents, customerEmail, metadata } = await request.json();
+    const { amountCents, customerEmail, metadata, returnUrl } = await request.json();
 
     if (!amountCents || amountCents < 50) {
       return NextResponse.json(
@@ -43,8 +43,8 @@ export async function POST(request: Request) {
         type: "donation",
         ...(metadata || {}),
       },
-      success_url: `${siteUrl}/donate/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/donate/cancelled`,
+      success_url: returnUrl ? `${returnUrl}?success=true` : `${siteUrl}/donate/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: returnUrl ? `${returnUrl}?canceled=true` : `${siteUrl}/donate/cancelled`,
     });
 
     return NextResponse.json({ url: session.url });
