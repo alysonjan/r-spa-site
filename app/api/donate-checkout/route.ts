@@ -6,6 +6,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-10-29.clover" as any,
 });
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
+}
+
 export async function POST(request: Request) {
   try {
     const { amountCents, customerEmail, metadata, returnUrl } = await request.json();
@@ -13,7 +24,7 @@ export async function POST(request: Request) {
     if (!amountCents || amountCents < 50) {
       return NextResponse.json(
         { error: "Minimum donation is $0.50" },
-        { status: 400 }
+        { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
       );
     }
 
@@ -47,12 +58,12 @@ export async function POST(request: Request) {
       cancel_url: returnUrl ? `${returnUrl}?canceled=true` : `${siteUrl}/donate/cancelled`,
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url }, { headers: { "Access-Control-Allow-Origin": "*" } });
   } catch (error: any) {
     console.error("[donate-checkout] Error:", error.message);
     return NextResponse.json(
       { error: error.message || "Failed to create checkout session" },
-      { status: 500 }
+      { status: 500, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 }
