@@ -54,12 +54,12 @@ export async function POST(req: Request) {
     if (!ratelimit(ip)) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
-        { status: 429 },
+        { status: 429, headers: { 'Access-Control-Allow-Origin': '*' } },
       );
     }
 
     const body = await req.json();
-    if (body?.company) return NextResponse.json({ ok: true }); // 蜜罐
+    if (body?.company) return NextResponse.json({ ok: true }, { headers: { 'Access-Control-Allow-Origin': '*' } }); // 蜜罐
 
     const data = schema.parse(body);
 
@@ -78,17 +78,19 @@ export async function POST(req: Request) {
     if (serviceRow && serviceRow.is_active === false) {
       return NextResponse.json(
         { error: "service_unavailable" },
-        { status: 400 }
+        { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } }
       );
     }
 
     // Validate booking is not in the past
-    const bookingDatetime = new Date(`${data.date}T${data.time}`);
+    // Clean up AM/PM for simple Date parsing if present, though lib/bookings.ts handles timezone properly later
+    const cleanTime = data.time.replace(/\s*[AaPp][Mm]\s*/, "");
+    const bookingDatetime = new Date(`${data.date}T${cleanTime}`);
     const now = new Date();
-    if (bookingDatetime < now) {
+    if (bookingDatetime < now && !isNaN(bookingDatetime.getTime())) {
       return NextResponse.json(
         { error: "booking_in_past" },
-        { status: 400 }
+        { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } }
       );
     }
 
@@ -109,7 +111,10 @@ export async function POST(req: Request) {
 
     if (!result.success) {
       const status = result.error === "time_taken" ? 409 : 400;
-      return NextResponse.json({ error: result.error }, { status });
+      return NextResponse.json(
+        { error: result.error }, 
+        { status, headers: { 'Access-Control-Allow-Origin': '*' } }
+      );
     }
 
     // Send booking confirmation emails (non-blocking)
