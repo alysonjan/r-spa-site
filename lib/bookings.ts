@@ -67,8 +67,13 @@ export async function createBooking(
   // Allow formats like 2025/10/22
   const dateNorm = date.replace(/[./]/g, "-");
 
+  // Determine correct format based on presence of AM/PM
+  const timeFormat = time.toUpperCase().includes("AM") || time.toUpperCase().includes("PM") 
+    ? "YYYY-MM-DD hh:mm A" 
+    : "YYYY-MM-DD HH:mm";
+
   // Parse to local timezone
-  const startLocal = dayjs.tz(`${dateNorm} ${time}`, "YYYY-MM-DD HH:mm", TZ);
+  const startLocal = dayjs.tz(`${dateNorm} ${time}`, timeFormat, TZ);
   if (!startLocal.isValid()) {
     return { success: false, error: "Invalid date/time" };
   }
