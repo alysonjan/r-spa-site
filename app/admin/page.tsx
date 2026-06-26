@@ -16,6 +16,8 @@ import AdminBookingDetailModal from "@/components/AdminBookingDetailModal";
 import HolidayPackagesManagement from "@/components/admin/HolidayPackagesManagement";
 import SpecialOffersManagement from "@/components/admin/SpecialOffersManagement";
 import NewsletterManagement from "@/components/admin/NewsletterManagement";
+import TodayTabsManagement from "@/components/admin/TodayTabsManagement";
+import QRScannerManagement from "@/components/admin/QRScannerManagement";
 import toast from "react-hot-toast";
 
 type Booking = {
@@ -29,10 +31,10 @@ type Booking = {
   status: string;
 };
 
-type TabType = "bookings" | "classes" | "giftcards" | "clients" | "services" | "bistro" | "donations" | "packages" | "offers" | "newsletter";
+type TabType = "today" | "scanner" | "bookings" | "classes" | "giftcards" | "clients" | "services" | "bistro" | "donations" | "packages" | "offers" | "newsletter";
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<TabType>("bookings");
+  const [activeTab, setActiveTab] = useState<TabType>("today");
   const [pending, setPending] = useState<Booking[]>([]);
   const [confirmModal, setConfirmModal] = useState<{
     type: "deposit" | "refuse";
@@ -54,7 +56,7 @@ export default function AdminPage() {
   // 🔄 Sync active tab with URL hash so refreshing doesn't lose your place
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
-    if (["bookings", "classes", "giftcards", "clients", "services", "bistro", "donations", "packages", "offers"].includes(hash)) {
+    if (["today", "scanner", "bookings", "classes", "giftcards", "clients", "services", "bistro", "donations", "packages", "offers", "newsletter"].includes(hash)) {
       setActiveTab(hash as TabType);
     }
   }, []);
@@ -190,6 +192,31 @@ export default function AdminPage() {
         <nav className="flex-1 p-4 space-y-2 text-sm">
           
           <button
+            onClick={() => setActiveTab("today")}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 ${
+              activeTab === "today"
+                ? "bg-purple-100 text-purple-700 font-medium"
+                : "hover:bg-zinc-100"
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            Today's Customers
+          </button>
+          <button
+            onClick={() => setActiveTab("scanner")}
+            className={`flex w-full items-center gap-2 rounded-md px-3 py-2 ${
+              activeTab === "scanner"
+                ? "bg-purple-100 text-purple-700 font-medium"
+                : "hover:bg-zinc-100"
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-scan-line"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg>
+            Scan QR
+          </button>
+          
+          <div className="h-px bg-zinc-200 my-2" />
+          
+          <button
             onClick={() => setActiveTab("bookings")}
             className={`flex w-full items-center gap-2 rounded-md px-3 py-2 ${
               activeTab === "bookings"
@@ -198,7 +225,7 @@ export default function AdminPage() {
             }`}
           >
             <CalendarDays className="h-4 w-4" />
-            Bookings
+            Bookings Schedule
           </button>
           <button
             onClick={() => setActiveTab("giftcards")}
@@ -326,6 +353,26 @@ export default function AdminPage() {
             <div className="bg-white rounded-lg p-1 border overflow-x-auto">
               <div className="flex gap-2 min-w-max">
                 <button
+                  onClick={() => setActiveTab("today")}
+                  className={`flex-none min-w-[100px] px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "today"
+                      ? "bg-purple-600 text-white"
+                      : "text-zinc-600 hover:bg-zinc-100"
+                  }`}
+                >
+                  Today's Customers
+                </button>
+                <button
+                  onClick={() => setActiveTab("scanner")}
+                  className={`flex-none min-w-[100px] px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "scanner"
+                      ? "bg-purple-600 text-white"
+                      : "text-zinc-600 hover:bg-zinc-100"
+                  }`}
+                >
+                  Scan QR
+                </button>
+                <button
                   onClick={() => setActiveTab("bookings")}
                   className={`flex-none min-w-[100px] px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     activeTab === "bookings"
@@ -428,6 +475,32 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
+
+          {/* Today's Tabs Dashboard */}
+          {activeTab === "today" && (
+            <motion.div
+              key="today"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <TodayTabsManagement />
+            </motion.div>
+          )}
+
+          {/* QR Scanner Tab */}
+          {activeTab === "scanner" && (
+            <motion.div
+              key="scanner"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <QRScannerManagement />
+            </motion.div>
+          )}
 
           {/* Bookings Tab */}
           {activeTab === "bookings" && (
