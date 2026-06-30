@@ -23,6 +23,7 @@ export type CreateBookingParams = {
   offer_code?: string;
   package_code?: string;
   addons?: string[];
+  price_cents?: number;
 };
 
 export type CreateBookingResult = {
@@ -62,6 +63,7 @@ export async function createBooking(
     offer_code,
     package_code,
     addons,
+    price_cents,
   } = params;
 
   // Allow formats like 2025/10/22
@@ -118,6 +120,7 @@ export async function createBooking(
     offer_code: offer_code || null,
     package_code: package_code || null,
     addons: addons || null,
+    price_cents: price_cents || 0,
   };
 
   const { data: inserted, error: insertError } = await supabaseAdmin

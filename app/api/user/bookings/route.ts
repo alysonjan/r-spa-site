@@ -35,7 +35,7 @@ export async function GET(req: Request) {
       date: b.start_at.split('T')[0],
       time: new Date(b.start_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }), // Approximate mapping
       status: b.status === 'pending' ? 'Pending' : b.status === 'confirmed' ? 'Confirmed' : b.status === 'cancelled' ? 'Cancelled' : 'Completed',
-      price: "0.00", // Not explicitly stored in bookings table currently
+      price: b.price_cents ? (b.price_cents / 100).toFixed(2) : "0.00", // Fallback to 0.00 if old booking without price_cents
     }));
 
     return NextResponse.json(mapped, { headers: { 'Access-Control-Allow-Origin': '*' } });
