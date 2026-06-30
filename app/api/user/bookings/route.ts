@@ -27,20 +27,22 @@ export async function GET(req: Request) {
     if (error) throw error;
 
     // Build a service name -> price lookup from the services table
-    const { data: services } = await supabaseAdmin
+    const { data: services, error: svcError } = await supabaseAdmin
       .from("services")
-      .select("name, title, options")
-      .eq("is_active", true);
+      .select("title, options");
+
+    if (svcError) {
+      console.error("[/api/user/bookings] services lookup error:", svcError);
+    }
 
     const servicePriceMap: Record<string, number> = {};
     for (const svc of services || []) {
-      const key = svc.title || svc.name;
-      if (key && svc.options && Array.isArray(svc.options) && svc.options.length > 0) {
+      if (svc.title && svc.options && Array.isArray(svc.options) && svc.options.length > 0) {
         // Use the first option's price as the default
         const rawPrice = String(svc.options[0].price || "0").replace(/[^0-9.]/g, "");
         const cents = Math.round(parseFloat(rawPrice) * 100);
         if (cents > 0) {
-          servicePriceMap[key] = cents;
+          servicePriceMap[svc.title] = cents;
         }
       }
     }

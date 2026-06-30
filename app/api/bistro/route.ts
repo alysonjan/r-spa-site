@@ -6,17 +6,17 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   try {
-    // 1. Get published menus
-    const { data: menus, error: menusError } = await supabaseAdmin
-      .from('bistro_menus')
+    const { data: items, error } = await supabaseAdmin
+      .from('bistro_items')
       .select('*')
-      .eq('is_published', true)
-      .order('created_at', { ascending: false });
+      .eq('is_active', true)
+      .order('category')
+      .order('item_name');
 
-    if (menusError) throw menusError;
+    if (error) throw error;
 
-    if (!menus || menus.length === 0) {
-      return NextResponse.json({ menus: [], items: [] }, {
+    if (!items || items.length === 0) {
+      return NextResponse.json({ menus: [], itemsByMenu: {} }, {
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -24,40 +24,49 @@ export async function GET(req: Request) {
       });
     }
 
-    // 2. Get the items for these menus
-    const menuIds = menus.map(m => m.id);
-    
-    const { data: menuItems, error: itemsError } = await supabaseAdmin
-      .from('bistro_menu_items')
-      .select(`
-        menu_id,
-        sort_order,
-        bistro_items (*)
-      `)
-      .in('menu_id', menuIds);
+    // Group items by category just like the web app
+    const categories: Record<string, any[]> = {};
+    items.forEach(item => {
+      const cat = item.category || 'Other';
+      if (!categories[cat]) categories[cat] = [];
+      categories[cat].push(item);
+    });
 
-    if (itemsError) throw itemsError;
+    // Define food categories and bar categories
+    const foodCategoryOrder = ["Small Plates", "Salads", "Pasta", "Mains", "Desserts"];
+    const barCategories = ["Cocktails", "Wine", "Beer & Zero-Proof"];
 
-    // Filter out inactive items just in case
-    const filteredItems = menuItems?.filter((mi: any) => mi.bistro_items?.is_active) || [];
+    // Any category not in barCategories is treated as a food category
+    const foodCats = Object.keys(categories)
+      .filter(c => !barCategories.includes(c))
+      .sort((a, b) => {
+        const idxA = foodCategoryOrder.indexOf(a);
+        const idxB = foodCategoryOrder.indexOf(b);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return a.localeCompare(b);
+      });
 
-    // Format the response to be easy to consume by the frontend
-    // Shape: { menus: [{ id, name }], menuData: { [menu_id]: [item1, item2] } }
-    const responseData = {
-      menus: menus.map(m => ({ id: m.id, name: m.name })),
-      itemsByMenu: {} as any
-    };
+    const hasBarItems = barCategories.some(c => categories[c]?.length > 0);
 
-    for (const menu of menus) {
-      const itemsForThisMenu = filteredItems
-        .filter((mi: any) => mi.menu_id === menu.id)
-        .sort((a: any, b: any) => a.sort_order - b.sort_order)
-        .map((mi: any) => mi.bistro_items);
-        
-      responseData.itemsByMenu[menu.id] = itemsForThisMenu;
+    // We will create two logical "menus" for the mobile app to tab between:
+    // 1. "Food Menu"
+    // 2. "Bar Menu" (if there are bar items)
+    const menus = [{ id: 'food', name: 'Food Menu' }];
+    if (hasBarItems) {
+      menus.push({ id: 'bar', name: 'Bar Menu' });
     }
 
-    return NextResponse.json(responseData, {
+    const itemsByMenu: Record<string, any[]> = {
+      'food': foodCats.flatMap(cat => categories[cat]),
+    };
+
+    if (hasBarItems) {
+      itemsByMenu['bar'] = barCategories.flatMap(cat => categories[cat] || []);
+    }
+
+    return NextResponse.json({ menus, itemsByMenu }, {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
