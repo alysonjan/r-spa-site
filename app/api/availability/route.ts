@@ -62,8 +62,30 @@ export async function GET(req: Request) {
     return `${hh}:${mm}`;
   });
 
+  // Expand busy intervals into individual 15-min slot strings in Toronto timezone (HH:MM, 24h format)
+  // This lets the mobile filter by simple string matching, avoiding timezone math issues
+  const busySlots: string[] = [];
+  for (const b of bookings) {
+    const bStart = new Date(b.start_at);
+    const bEnd = new Date(b.end_at);
+    // Walk in 15-min steps from start to end
+    const cursor = new Date(bStart);
+    while (cursor < bEnd) {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: TZ,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).formatToParts(cursor);
+      const hh = parts.find((p) => p.type === "hour")?.value ?? "00";
+      const mm = parts.find((p) => p.type === "minute")?.value ?? "00";
+      busySlots.push(`${hh}:${mm}`);
+      cursor.setMinutes(cursor.getMinutes() + 15);
+    }
+  }
+
   return NextResponse.json(
-    { busyIntervals, busy },
+    { busyIntervals, busy, busySlots },
     {
       headers: {
         "Cache-Control": "no-store",
