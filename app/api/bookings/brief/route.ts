@@ -7,7 +7,7 @@ dayjs.extend(utc);
 export async function GET(req: Request) {
   const id = new URL(req.url).searchParams.get("id");
   if (!id) {
-    return NextResponse.json({ error: "id required" }, { status: 400 });
+    return NextResponse.json({ error: "id required" }, { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } });
   }
 
   const { data, error } = await supabaseAdmin
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 
   if (error || !data) {
     console.error("[api/bookings/brief] not found:", error);
-    return NextResponse.json({ error: "not found" }, { status: 404 });
+    return NextResponse.json({ error: "not found" }, { status: 404, headers: { 'Access-Control-Allow-Origin': '*' } });
   }
 
   return NextResponse.json({
@@ -28,5 +28,16 @@ export async function GET(req: Request) {
     start_ts_fmt: data.start_at
       ? dayjs.utc(data.start_at).local().format("MMM D, YYYY h:mm A")
       : "",
+  }, { headers: { 'Access-Control-Allow-Origin': '*' } });
+}
+
+export async function OPTIONS(req: Request) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
   });
 }

@@ -33,6 +33,7 @@ const schema = z.object({
   offer_code: z.string().optional(),
   package_code: z.string().optional(),
   addons: z.array(z.string()).optional(),
+  price_cents: z.number().optional(),
 });
 
 export async function OPTIONS(req: Request) {
@@ -107,6 +108,7 @@ export async function POST(req: Request) {
       offer_code: data.offer_code,
       package_code: data.package_code,
       addons: data.addons,
+      price_cents: data.price_cents,
     });
 
     if (!result.success) {
