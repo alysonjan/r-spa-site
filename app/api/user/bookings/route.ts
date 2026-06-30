@@ -18,8 +18,6 @@ export async function GET(req: Request) {
       .select("*")
       .order("start_at", { ascending: false });
 
-    // In a real app we'd verify the JWT, but for now we just filter by email or customer_name
-    // Actually, createBooking saves customer_email
     if (email) {
       query = query.eq("customer_email", email);
     }
@@ -28,15 +26,42 @@ export async function GET(req: Request) {
 
     if (error) throw error;
 
+    // Build a service name -> price lookup from the services table
+    const { data: services } = await supabaseAdmin
+      .from("services")
+      .select("name, title, options")
+      .eq("is_active", true);
+
+    const servicePriceMap: Record<string, number> = {};
+    for (const svc of services || []) {
+      const key = svc.title || svc.name;
+      if (key && svc.options && Array.isArray(svc.options) && svc.options.length > 0) {
+        // Use the first option's price as the default
+        const rawPrice = String(svc.options[0].price || "0").replace(/[^0-9.]/g, "");
+        const cents = Math.round(parseFloat(rawPrice) * 100);
+        if (cents > 0) {
+          servicePriceMap[key] = cents;
+        }
+      }
+    }
+
     // Map to what mobile app expects
-    const mapped = (data || []).map(b => ({
-      id: b.id,
-      serviceName: b.service_name,
-      date: b.start_at.split('T')[0],
-      time: new Date(b.start_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }), // Approximate mapping
-      status: b.status === 'pending' ? 'Pending' : b.status === 'confirmed' ? 'Confirmed' : b.status === 'cancelled' ? 'Cancelled' : 'Completed',
-      price: b.price_cents ? (b.price_cents / 100).toFixed(2) : "0.00", // Fallback to 0.00 if old booking without price_cents
-    }));
+    const mapped = (data || []).map(b => {
+      // Use price_cents from booking if available, otherwise look up from services table
+      let priceCents = b.price_cents || 0;
+      if (!priceCents && b.service_name && servicePriceMap[b.service_name]) {
+        priceCents = servicePriceMap[b.service_name];
+      }
+
+      return {
+        id: b.id,
+        serviceName: b.service_name,
+        date: b.start_at.split('T')[0],
+        time: new Date(b.start_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }),
+        status: b.status === 'pending' ? 'Pending' : b.status === 'confirmed' ? 'Confirmed' : b.status === 'cancelled' ? 'Cancelled' : 'Completed',
+        price: priceCents > 0 ? (priceCents / 100).toFixed(2) : "0.00",
+      };
+    });
 
     return NextResponse.json(mapped, { headers: { 'Access-Control-Allow-Origin': '*' } });
 

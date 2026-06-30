@@ -65,8 +65,8 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-      success_url: returnUrl ? `${returnUrl}?success=true` : `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/success`,
-      cancel_url: returnUrl ? `${returnUrl}?canceled=true` : `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/cancel`,
+      success_url: returnUrl ? `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}success=true` : `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/success`,
+      cancel_url: returnUrl ? `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}canceled=true` : `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/cancel`,
     });
 
     return NextResponse.json(
